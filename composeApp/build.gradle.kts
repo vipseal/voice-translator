@@ -67,7 +67,8 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
-            implementation(compose.material)
+            @Suppress("DEPRECATION")
+            implementation(compose.materialIconsExtended)
             
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)

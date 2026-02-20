@@ -91,11 +91,17 @@ jobs:
         run: find . -name "GeminiService.kt" -exec sed -i 's/GEMINI_API_KEY_PLACEHOLDER/${{ secrets.GEMINI_API_KEY }}/g' {} +
       - name: Build Windows MSI
         run: ./gradlew :composeApp:packageMsi
+      - name: Find Windows artifacts
+        shell: bash
+        run: find composeApp/build/compose/binaries -type f 2>/dev/null || echo "No binaries found"
       - name: Upload Windows MSI
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: desktop-windows
-          path: composeApp/build/compose/binaries/main/msi/*.msi
+          path: |
+            composeApp/build/compose/binaries/**/*.msi
+            composeApp/build/compose/binaries/**/*.exe
 
   build-ios:
     runs-on: macos-latest
