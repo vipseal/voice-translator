@@ -79,36 +79,13 @@ jobs:
       - name: Set Gemini API Key
         shell: bash
         run: find . -name "GeminiService.kt" -exec sed -i 's/GEMINI_API_KEY_PLACEHOLDER/${{ secrets.GEMINI_API_KEY }}/g' {} +
-      - name: Build Windows Distributable
-        run: ./gradlew :composeApp:createReleaseDistributable
-      - name: Find and package Windows distributable
-        shell: bash
-        run: |
-          echo "=== Full build output tree ==="
-          find composeApp/build/compose -type f 2>/dev/null | head -50 || echo "No compose build dir"
-          find composeApp/build -maxdepth 3 -type d 2>/dev/null | head -30
-          APP_DIR=$(find composeApp/build/compose -type d -name "*.dir" -o -type d -name "app" 2>/dev/null | head -1)
-          if [ -z "$APP_DIR" ]; then
-            APP_DIR=$(find composeApp/build -type d -path "*/binaries/*" 2>/dev/null | tail -1)
-          fi
-          if [ -z "$APP_DIR" ]; then
-            echo "Falling back to uber jar..."
-            ./gradlew :composeApp:packageUberJarForCurrentOS || true
-            find composeApp/build -name "*.jar" -path "*/jars/*" 2>/dev/null
-          fi
-          if [ -n "$APP_DIR" ]; then
-            echo "Using: $APP_DIR"
-            cd "$APP_DIR"
-            powershell Compress-Archive -Path * -DestinationPath "$GITHUB_WORKSPACE/VoiceTranslator-windows.zip"
-          fi
+      - name: Build Windows Uber JAR
+        run: ./gradlew :composeApp:packageUberJarForCurrentOS
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
-        if: always()
         with:
           name: desktop-windows
-          path: |
-            VoiceTranslator-windows.zip
-            composeApp/build/compose/jars/*.jar
+          path: composeApp/build/compose/jars/*.jar
 
   build-ios:
     runs-on: macos-latest
