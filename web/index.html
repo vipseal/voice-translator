@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>语音翻译 - VoiceTranslator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0f0f1a; --surface: #1a1a2e; --surface2: #222240;
+            --primary: #7c4dff; --primary-light: #b47cff;
+            --text: #e8e8f0; --text-muted: #8888aa;
+            --success: #4caf50; --danger: #ff5252;
+            --radius: 16px;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        
+        .app { max-width: 500px; margin: 0 auto; padding: 1rem; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        /* Header */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0 1rem; }
+        .header h1 { font-size: 1.3rem; font-weight: 600; background: linear-gradient(135deg, var(--primary), var(--primary-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .settings-btn { background: var(--surface); border: none; color: var(--text-muted); font-size: 1.3rem; padding: 0.5rem; border-radius: 50%; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+        .settings-btn:hover { background: var(--surface2); color: var(--text); }
+        
+        /* Source text */
+        .source-card { background: var(--surface); border-radius: var(--radius); padding: 1.2rem; margin-bottom: 1rem; min-height: 80px; }
+        .source-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem; }
+        .source-text { font-size: 1.1rem; line-height: 1.6; white-space: pre-wrap; }
+        .source-text.placeholder { color: var(--text-muted); font-style: italic; }
+        .detected-lang { display: inline-block; background: var(--primary); color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; margin-top: 0.5rem; }
+        
+        /* Translations */
+        .translations { flex: 1; overflow-y: auto; margin-bottom: 1rem; }
+        .trans-card { background: var(--surface); border-radius: var(--radius); padding: 1rem 1.2rem; margin-bottom: 0.75rem; transition: all 0.3s; }
+        .trans-card:active { transform: scale(0.98); }
+        .trans-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+        .trans-lang { font-size: 0.8rem; font-weight: 600; color: var(--primary-light); }
+        .trans-speak { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem; padding: 4px; }
+        .trans-speak:hover { color: var(--primary-light); }
+        .trans-text { font-size: 1rem; line-height: 1.5; }
+        .trans-text.loading { color: var(--text-muted); }
+        
+        /* Record button */
+        .record-area { padding: 1rem 0; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+        .record-btn { width: 72px; height: 72px; border-radius: 50%; border: 3px solid var(--primary); background: var(--surface); color: var(--primary); font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; position: relative; }
+        .record-btn:hover { background: var(--surface2); transform: scale(1.05); }
+        .record-btn.recording { background: var(--danger); border-color: var(--danger); color: white; animation: pulse 1.5s infinite; }
+        .record-btn.processing { background: var(--primary); border-color: var(--primary); color: white; animation: spin 1s linear infinite; }
+        .record-hint { font-size: 0.75rem; color: var(--text-muted); }
+        
+        @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,82,82,0.4); } 50% { box-shadow: 0 0 0 15px rgba(255,82,82,0); } }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        /* Settings overlay */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100; display: none; justify-content: center; align-items: flex-end; }
+        .overlay.show { display: flex; }
+        .settings-panel { background: var(--surface); width: 100%; max-width: 500px; max-height: 80vh; border-radius: var(--radius) var(--radius) 0 0; padding: 1.5rem; overflow-y: auto; }
+        .settings-panel h2 { font-size: 1.1rem; margin-bottom: 1rem; }
+        .lang-option { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .lang-option label { font-size: 0.95rem; cursor: pointer; flex: 1; }
+        .lang-option .flag { margin-right: 0.75rem; font-size: 1.2rem; }
+        .toggle { position: relative; width: 44px; height: 24px; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #444; border-radius: 12px; transition: 0.3s; }
+        .toggle .slider:before { content: ''; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+        .toggle input:checked + .slider { background: var(--primary); }
+        .toggle input:checked + .slider:before { transform: translateX(20px); }
+        .close-settings { width: 100%; padding: 0.75rem; background: var(--surface2); border: none; color: var(--text); border-radius: 10px; font-size: 1rem; cursor: pointer; margin-top: 1rem; }
+        
+        /* Status bar */
+        .status { text-align: center; font-size: 0.7rem; color: var(--text-muted); padding: 0.25rem; }
+        
+        /* History */
+        .history-divider { text-align: center; color: var(--text-muted); font-size: 0.75rem; margin: 1rem 0 0.5rem; }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="header">
+        <h1>🌐 语音翻译</h1>
+        <button class="settings-btn" onclick="toggleSettings()">⚙️</button>
+    </div>
+    
+    <div class="source-card">
+        <div class="source-label">原文 / Source</div>
+        <div class="source-text placeholder" id="sourceText">点击下方麦克风开始录音...</div>
+        <span class="detected-lang" id="detectedLang" style="display:none"></span>
+    </div>
+    
+    <div id="copyAllBtn" style="display:none;text-align:right;margin-bottom:0.5rem;">
+        <button onclick="copyAllTranslations()" style="background:var(--surface);border:1px solid var(--primary);color:var(--primary-light);padding:6px 14px;border-radius:20px;font-size:0.8rem;cursor:pointer;">📄 复制全部翻译</button>
+    </div>
+    
+    <div class="translations" id="translations"></div>
+    
+    <div class="record-area">
+        <div style="display:flex;gap:1rem;align-items:center;">
+            <button class="record-btn" id="recordBtn" onclick="toggleRecord()">🎤</button>
+            <button class="record-btn" id="clipBtn" onclick="translateClipboard()" style="width:56px;height:56px;font-size:1.2rem;">📋</button>
+        </div>
+        <div class="record-hint" id="recordHint">🎤 录音　📋 粘贴翻译</div>
+    </div>
+    
+    <div class="status" id="status">Gemini AI 翻译</div>
+</div>
+
+<!-- Settings -->
+<div class="overlay" id="settingsOverlay" onclick="if(event.target===this)toggleSettings()">
+    <div class="settings-panel">
+        <h2>🌍 翻译语言设置</h2>
+        <div id="langList"></div>
+        <button class="close-settings" onclick="toggleSettings()">完成</button>
+    </div>
+</div>
+
+<script>
+const GEMINI_KEY = 'AIzaSyBZiH83R5mmdIi7J8b3uDyYZGPM1W_Vwt4';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`;
+
+const ALL_LANGS = [
+    { code: 'en', name: 'English', flag: '🇺🇸', enabled: true },
+    { code: 'zh', name: '中文', flag: '🇨🇳', enabled: true },
+    { code: 'ja', name: '日本語', flag: '🇯🇵', enabled: true },
+    { code: 'ko', name: '한국어', flag: '🇰🇷', enabled: false },
+    { code: 'ar', name: 'العربية', flag: '🇸🇦', enabled: false },
+    { code: 'fr', name: 'Français', flag: '🇫🇷', enabled: false },
+    { code: 'de', name: 'Deutsch', flag: '🇩🇪', enabled: false },
+    { code: 'es', name: 'Español', flag: '🇪🇸', enabled: false },
+    { code: 'ru', name: 'Русский', flag: '🇷🇺', enabled: false },
+    { code: 'th', name: 'ไทย', flag: '🇹🇭', enabled: true },
+    { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳', enabled: false },
+    { code: 'pt', name: 'Português', flag: '🇧🇷', enabled: false },
+    { code: 'hi', name: 'हिन्दी', flag: '🇮🇳', enabled: false },
+    { code: 'id', name: 'Bahasa Indonesia', flag: '🇮🇩', enabled: false },
+    { code: 'tr', name: 'Türkçe', flag: '🇹🇷', enabled: false },
+];
+
+let langs = JSON.parse(localStorage.getItem('vt_langs') || 'null') || ALL_LANGS;
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
+let isProcessing = false;
+
+// Init settings UI
+function renderSettings() {
+    const list = document.getElementById('langList');
+    list.innerHTML = langs.map((l, i) => `
+        <div class="lang-option">
+            <span class="flag">${l.flag}</span>
+            <label for="lang_${i}">${l.name}</label>
+            <div class="toggle">
+                <input type="checkbox" id="lang_${i}" ${l.enabled ? 'checked' : ''} onchange="toggleLang(${i})">
+                <span class="slider"></span>
+            </div>
+        </div>
+    `).join('');
+}
+
+function toggleLang(i) {
+    langs[i].enabled = !langs[i].enabled;
+    localStorage.setItem('vt_langs', JSON.stringify(langs));
+}
+
+function toggleSettings() {
+    const o = document.getElementById('settingsOverlay');
+    o.classList.toggle('show');
+    if (o.classList.contains('show')) renderSettings();
+}
+
+function getEnabledLangs() {
+    return langs.filter(l => l.enabled);
+}
+
+// Audio recording
+async function toggleRecord() {
+    if (isProcessing) return;
+    if (isRecording) {
+        stopRecording();
+    } else {
+        startRecording();
+    }
+}
+
+async function startRecording() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream, { mimeType: getSupportedMime() });
+        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+        mediaRecorder.onstop = () => {
+            stream.getTracks().forEach(t => t.stop());
+            processAudio();
+        };
+        mediaRecorder.start();
+        isRecording = true;
+        updateRecordUI();
+    } catch (e) {
+        setStatus('❌ 麦克风权限被拒绝');
+    }
+}
+
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+    }
+    isRecording = false;
+    isProcessing = true;
+    updateRecordUI();
+}
+
+function getSupportedMime() {
+    const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
+    for (const t of types) { if (MediaRecorder.isTypeSupported(t)) return t; }
+    return '';
+}
+
+function updateRecordUI() {
+    const btn = document.getElementById('recordBtn');
+    const hint = document.getElementById('recordHint');
+    btn.className = 'record-btn' + (isRecording ? ' recording' : '') + (isProcessing ? ' processing' : '');
+    btn.innerHTML = isRecording ? '⏹' : isProcessing ? '⏳' : '🎤';
+    hint.textContent = isRecording ? '录音中...点击停止' : isProcessing ? '识别翻译中...' : '点击录音';
+}
+
+async function processAudio() {
+    setStatus('🔄 正在识别语音...');
+    const blob = new Blob(audioChunks, { type: getSupportedMime() || 'audio/webm' });
+    
+    try {
+        const b64 = await blobToBase64(blob);
+        const mimeType = blob.type || 'audio/webm';
+        
+        // Step 1: Transcribe
+        const transcription = await transcribeAudio(b64, mimeType);
+        if (!transcription) throw new Error('无法识别语音');
+        
+        document.getElementById('sourceText').textContent = transcription.text;
+        document.getElementById('sourceText').classList.remove('placeholder');
+        
+        if (transcription.lang) {
+            const dl = document.getElementById('detectedLang');
+            dl.textContent = '🔍 ' + transcription.lang;
+            dl.style.display = 'inline-block';
+        }
+        
+        // Step 2: Translate
+        setStatus('🌍 正在翻译...');
+        const enabled = getEnabledLangs();
+        showTranslationPlaceholders(enabled);
+        
+        const translations = await translateText(transcription.text, transcription.langCode, enabled);
+        showTranslations(translations, enabled);
+        
+        setStatus('✅ 翻译完成');
+    } catch (e) {
+        setStatus('❌ ' + e.message);
+    } finally {
+        isProcessing = false;
+        updateRecordUI();
+    }
+}
+
+function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+
+async function transcribeAudio(b64, mimeType) {
+    const resp = await fetch(GEMINI_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [
+                { inlineData: { mimeType, data: b64 } },
+                { text: 'Transcribe this audio. Respond in JSON format: {"text": "transcribed text here", "lang": "detected language name", "langCode": "ISO 639-1 code"}. Only output the JSON, nothing else.' }
+            ]}],
+            generationConfig: { temperature: 0 }
+        })
+    });
+    
+    const data = await resp.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error('识别失败');
+    
+    try {
+        const cleaned = text.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+        return JSON.parse(cleaned);
+    } catch {
+        return { text: text.trim(), lang: 'Unknown', langCode: 'und' };
+    }
+}
+
+async function translateText(text, sourceLang, targetLangs) {
+    const langNames = targetLangs.map(l => `${l.code}: ${l.name}`).join(', ');
+    
+    const resp = await fetch(GEMINI_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: 
+                `Translate the following text to these languages: ${langNames}
+
+Text: "${text}"
+Source language: ${sourceLang}
+
+Respond ONLY in JSON format like: {"en": "translation", "zh": "翻译", ...}
+If the source text is already in a target language, keep it as-is for that language.
+Only output the JSON object, nothing else.` 
+            }]}],
+            generationConfig: { temperature: 0.1 }
+        })
+    });
+    
+    const data = await resp.json();
+    const resultText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!resultText) return {};
+    
+    try {
+        const cleaned = resultText.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+        return JSON.parse(cleaned);
+    } catch {
+        return {};
+    }
+}
+
+function showTranslationPlaceholders(enabledLangs) {
+    const container = document.getElementById('translations');
+    container.innerHTML = enabledLangs.map(l => `
+        <div class="trans-card" id="trans_${l.code}">
+            <div class="trans-header">
+                <span class="trans-lang">${l.flag} ${l.name}</span>
+            </div>
+            <div class="trans-text loading">翻译中...</div>
+        </div>
+    `).join('');
+}
+
+let lastTranslations = {};
+let lastEnabledLangs = [];
+
+function showTranslations(translations, enabledLangs) {
+    lastTranslations = translations;
+    lastEnabledLangs = enabledLangs;
+    const container = document.getElementById('translations');
+    container.innerHTML = enabledLangs.map(l => {
+        const text = translations[l.code] || '(翻译不可用)';
+        return `
+            <div class="trans-card" onclick="copyOne('${l.flag} ${escapeJs(l.name)}', '${escapeJs(text)}')">
+                <div class="trans-header">
+                    <span class="trans-lang">${l.flag} ${l.name}</span>
+                    <span>
+                        <button class="trans-speak" onclick="event.stopPropagation();copyOne('${l.flag} ${escapeJs(l.name)}', '${escapeJs(text)}')" title="复制">📄</button>
+                        <button class="trans-speak" onclick="event.stopPropagation();speak('${escapeJs(text)}', '${l.code}')" title="朗读">🔊</button>
+                    </span>
+                </div>
+                <div class="trans-text">${escapeHtml(text)}</div>
+            </div>
+        `;
+    }).join('');
+    document.getElementById('copyAllBtn').style.display = 'block';
+}
+
+function copyOne(langName, text) {
+    navigator.clipboard.writeText(text).then(() => {
+        setStatus('✅ 已复制 ' + langName);
+        setTimeout(() => setStatus('Gemini AI 翻译'), 1500);
+    }).catch(() => {});
+}
+
+function copyAllTranslations() {
+    const source = document.getElementById('sourceText').textContent;
+    const detected = document.getElementById('detectedLang').textContent;
+    let result = '📝 原文' + (detected ? ' (' + detected.replace('🔍 ','') + ')' : '') + ':\n' + source + '\n\n';
+    result += '🌍 翻译结果:\n' + '─'.repeat(20) + '\n';
+    lastEnabledLangs.forEach(l => {
+        const text = lastTranslations[l.code] || '';
+        if (text) result += `\n${l.flag} ${l.name}:\n${text}\n`;
+    });
+    result += '\n' + '─'.repeat(20) + '\n⚡ VoiceTranslator by Gemini AI';
+    navigator.clipboard.writeText(result).then(() => {
+        setStatus('✅ 已复制全部翻译');
+        setTimeout(() => setStatus('Gemini AI 翻译'), 2000);
+    }).catch(() => {});
+}
+
+function speak(text, lang) {
+    if ('speechSynthesis' in window) {
+        speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = lang;
+        speechSynthesis.speak(u);
+    }
+}
+
+function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escapeJs(s) { return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n'); }
+function setStatus(s) { document.getElementById('status').textContent = s; }
+
+async function translateClipboard() {
+    if (isProcessing) return;
+    try {
+        let text = '';
+        if (navigator.clipboard && navigator.clipboard.readText) {
+            text = await navigator.clipboard.readText();
+        }
+        if (!text) {
+            // Fallback: prompt input
+            text = prompt('粘贴要翻译的文字:');
+        }
+        if (!text || !text.trim()) return;
+        
+        isProcessing = true;
+        updateRecordUI();
+        
+        document.getElementById('sourceText').textContent = text.trim();
+        document.getElementById('sourceText').classList.remove('placeholder');
+        document.getElementById('detectedLang').style.display = 'none';
+        
+        setStatus('🌍 正在翻译...');
+        const enabled = getEnabledLangs();
+        showTranslationPlaceholders(enabled);
+        
+        // Detect language + translate in one call
+        const langNames = enabled.map(l => `${l.code}: ${l.name}`).join(', ');
+        const resp = await fetch(GEMINI_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: 
+                    `Detect the language and translate the following text to these languages: ${langNames}
+
+Text: "${text.trim()}"
+
+Respond ONLY in JSON: {"detectedLang": "language name", "detectedCode": "ISO code", "translations": {"en": "...", "zh": "...", ...}}
+If source matches a target language, keep as-is. Only output JSON.` 
+                }]}],
+                generationConfig: { temperature: 0.1 }
+            })
+        });
+        
+        const data = await resp.json();
+        const resultText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!resultText) throw new Error('翻译失败');
+        
+        const cleaned = resultText.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+        const result = JSON.parse(cleaned);
+        
+        if (result.detectedLang) {
+            const dl = document.getElementById('detectedLang');
+            dl.textContent = '🔍 ' + result.detectedLang;
+            dl.style.display = 'inline-block';
+        }
+        
+        showTranslations(result.translations || {}, enabled);
+        setStatus('✅ 翻译完成');
+    } catch (e) {
+        setStatus('❌ ' + e.message);
+    } finally {
+        isProcessing = false;
+        updateRecordUI();
+    }
+}
+
+// Init
+renderSettings();
+</script>
+</body>
+</html>

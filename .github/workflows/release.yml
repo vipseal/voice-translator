@@ -84,20 +84,31 @@ jobs:
       - name: Find and package Windows distributable
         shell: bash
         run: |
-          echo "=== Searching for distributable ==="
-          find composeApp/build/compose/binaries -type d -maxdepth 4 2>/dev/null || true
-          APP_DIR=$(find composeApp/build/compose/binaries -type d -name "app" 2>/dev/null | head -1)
+          echo "=== Full build output tree ==="
+          find composeApp/build/compose -type f 2>/dev/null | head -50 || echo "No compose build dir"
+          find composeApp/build -maxdepth 3 -type d 2>/dev/null | head -30
+          APP_DIR=$(find composeApp/build/compose -type d -name "*.dir" -o -type d -name "app" 2>/dev/null | head -1)
           if [ -z "$APP_DIR" ]; then
-            APP_DIR=$(find composeApp/build/compose/binaries -mindepth 2 -maxdepth 3 -type d 2>/dev/null | head -1)
+            APP_DIR=$(find composeApp/build -type d -path "*/binaries/*" 2>/dev/null | tail -1)
           fi
-          echo "Using: $APP_DIR"
-          cd "$APP_DIR"
-          powershell Compress-Archive -Path * -DestinationPath "$GITHUB_WORKSPACE/VoiceTranslator-windows.zip"
+          if [ -z "$APP_DIR" ]; then
+            echo "Falling back to uber jar..."
+            ./gradlew :composeApp:packageUberJarForCurrentOS || true
+            find composeApp/build -name "*.jar" -path "*/jars/*" 2>/dev/null
+          fi
+          if [ -n "$APP_DIR" ]; then
+            echo "Using: $APP_DIR"
+            cd "$APP_DIR"
+            powershell Compress-Archive -Path * -DestinationPath "$GITHUB_WORKSPACE/VoiceTranslator-windows.zip"
+          fi
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: desktop-windows
-          path: VoiceTranslator-windows.zip
+          path: |
+            VoiceTranslator-windows.zip
+            composeApp/build/compose/jars/*.jar
 
   build-ios:
     runs-on: macos-latest
@@ -122,8 +133,20 @@ jobs:
           name: ios-framework
           path: ComposeApp-ios-framework.zip
 
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package Web App
+        run: cd web && zip -r ../VoiceTranslator-web.zip .
+      - name: Upload Web App
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-app
+          path: VoiceTranslator-web.zip
+
   release:
-    needs: [build-android, build-desktop-linux, build-desktop-macos, build-desktop-windows, build-ios]
+    needs: [build-android, build-desktop-linux, build-desktop-macos, build-desktop-windows, build-ios, build-web]
     if: always() && startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     permissions:

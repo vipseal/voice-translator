@@ -78,7 +78,9 @@ actual class AudioRecorder {
                     val length = data.length.toInt()
                     if (length == 0) return@let null
                     ByteArray(length).also { bytes ->
-                        data.getBytes(bytes.refTo(0), length.toULong())
+                        bytes.usePinned { pinned ->
+                            data.getBytes(pinned.addressOf(0), data.length)
+                        }
                     }
                 }
             }
