@@ -79,33 +79,18 @@ jobs:
       - name: Set Gemini API Key
         shell: bash
         run: find . -name "GeminiService.kt" -exec sed -i 's/GEMINI_API_KEY_PLACEHOLDER/${{ secrets.GEMINI_API_KEY }}/g' {} +
-      - name: Build Windows EXE
+      - name: Build Windows Distributable
         run: ./gradlew :composeApp:createReleaseDistributable
-        continue-on-error: true
-      - name: Build Windows MSI
-        run: ./gradlew :composeApp:packageMsi
-        continue-on-error: true
       - name: Package Windows as ZIP
         shell: bash
         run: |
-          if [ -d "composeApp/build/compose/binaries/main/app" ]; then
-            cd composeApp/build/compose/binaries/main/app
-            powershell Compress-Archive -Path * -DestinationPath "$GITHUB_WORKSPACE/VoiceTranslator-windows.zip"
-          else
-            echo "No distributable found, trying uber jar..."
-          fi
-      - name: Build Uber JAR fallback
-        run: ./gradlew :composeApp:packageUberJarForCurrentOS
-        continue-on-error: true
+          cd composeApp/build/compose/binaries/main/app
+          powershell Compress-Archive -Path * -DestinationPath "$GITHUB_WORKSPACE/VoiceTranslator-windows.zip"
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
-        if: always()
         with:
           name: desktop-windows
-          path: |
-            VoiceTranslator-windows.zip
-            composeApp/build/compose/binaries/**/*.msi
-            composeApp/build/compose/jars/*.jar
+          path: VoiceTranslator-windows.zip
 
   build-ios:
     runs-on: macos-latest
