@@ -13,3 +13,5 @@
 *.aab
 *.jks
 *.keystore
+gradle-8.11/
+gradle-8.11.zip
