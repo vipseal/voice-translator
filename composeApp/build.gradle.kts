@@ -67,7 +67,7 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
-            implementation("org.jetbrains.compose.material:material-icons-core:1.10.1")
+            implementation(compose.material)
             
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
