@@ -1,22 +1,22 @@
 [versions]
-agp = "8.5.2"
-android-compileSdk = "34"
+agp = "8.7.3"
+android-compileSdk = "35"
 android-minSdk = "24"
-android-targetSdk = "34"
+android-targetSdk = "35"
 androidx-activityCompose = "1.9.3"
 androidx-appcompat = "1.7.0"
 androidx-constraintlayout = "2.2.0"
-androidx-core-ktx = "1.13.1"
+androidx-core-ktx = "1.15.0"
 androidx-espresso-core = "3.6.1"
 androidx-material = "1.12.0"
 androidx-test-junit = "1.2.1"
-compose = "1.7.3"
-compose-plugin = "1.7.3"
+compose = "1.7.6"
+compose-plugin = "1.10.1"
 junit = "4.13.2"
-kotlin = "2.1.0"
-ktor = "2.3.12"
-kotlinx-coroutines = "1.8.1"
-kotlinx-serialization = "1.7.3"
+kotlin = "2.1.10"
+ktor = "3.1.1"
+kotlinx-coroutines = "1.10.1"
+kotlinx-serialization = "1.8.0"
 kotlinx-datetime = "0.6.1"
 
 [libraries]
@@ -43,6 +43,7 @@ ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

@@ -1,8 +1,11 @@
+@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class, kotlinx.cinterop.BetaInteropApi::class)
+
 package com.hhaigc.translator.service
 
+import kotlinx.cinterop.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import platform.AVFoundation.*
+import platform.AVFAudio.*
 import platform.Foundation.*
 import platform.darwin.NSObject
 
@@ -12,7 +15,7 @@ actual class AudioRecorder {
     private var isCurrentlyRecording = false
     
     actual fun hasPermission(): Boolean {
-        return AVAudioSession.sharedInstance().recordPermission() == AVAudioSessionRecordPermissionGranted
+        return AVAudioSession.sharedInstance().recordPermission == AVAudioSessionRecordPermissionGranted
     }
     
     actual suspend fun startRecording(): Boolean = withContext(Dispatchers.Main) {
@@ -22,41 +25,33 @@ actual class AudioRecorder {
             }
             
             if (!hasPermission()) {
-                // Request permission
-                AVAudioSession.sharedInstance().requestRecordPermission { granted ->
-                    // Permission result will be handled in the next call
-                }
+                AVAudioSession.sharedInstance().requestRecordPermission { _ -> }
                 return@withContext false
             }
             
             // Configure audio session
             val audioSession = AVAudioSession.sharedInstance()
-            audioSession.setCategoryError(AVAudioSessionCategoryRecord, null)
-            audioSession.setActiveError(true, null)
+            audioSession.setCategory(AVAudioSessionCategoryRecord, error = null)
+            audioSession.setActive(true, error = null)
             
             // Create temporary file URL
-            val documentsPath = NSSearchPathForDirectoriesInDomains(
-                NSDocumentDirectory,
-                NSUserDomainMask,
-                true
-            ).first() as String
-            
-            outputURL = NSURL.fileURLWithPath("$documentsPath/recording.wav")
+            val tempDir = NSTemporaryDirectory()
+            outputURL = NSURL.fileURLWithPath("${tempDir}recording.wav")
             
             // Audio settings
             val settings = mapOf<Any?, Any?>(
-                AVFormatIDKey to kAudioFormatLinearPCM,
+                AVFormatIDKey to 1819304813L, // kAudioFormatLinearPCM
                 AVSampleRateKey to 44100.0,
-                AVNumberOfChannelsKey to 1,
-                AVLinearPCMBitDepthKey to 16,
+                AVNumberOfChannelsKey to 1L,
+                AVLinearPCMBitDepthKey to 16L,
                 AVLinearPCMIsBigEndianKey to false,
                 AVLinearPCMIsFloatKey to false
             )
             
-            audioRecorder = AVAudioRecorder.alloc().initWithURL(
-                outputURL!!,
-                settings as Map<Any?, Any?>,
-                null
+            audioRecorder = AVAudioRecorder(
+                uRL = outputURL!!,
+                settings = settings,
+                error = null
             )
             
             val success = audioRecorder?.record() ?: false
@@ -80,8 +75,10 @@ actual class AudioRecorder {
             
             val audioData = outputURL?.path?.let { path ->
                 NSData.dataWithContentsOfFile(path)?.let { data ->
-                    ByteArray(data.length.toInt()) { index ->
-                        data.bytes()!!.reinterpret<ByteVar>()[index]
+                    val length = data.length.toInt()
+                    if (length == 0) return@let null
+                    ByteArray(length).also { bytes ->
+                        data.getBytes(bytes.refTo(0), length.toULong())
                     }
                 }
             }
