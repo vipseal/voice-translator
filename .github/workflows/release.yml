@@ -81,10 +81,17 @@ jobs:
         run: find . -name "GeminiService.kt" -exec sed -i 's/GEMINI_API_KEY_PLACEHOLDER/${{ secrets.GEMINI_API_KEY }}/g' {} +
       - name: Build Windows Distributable
         run: ./gradlew :composeApp:createReleaseDistributable
-      - name: Package Windows as ZIP
+      - name: Find and package Windows distributable
         shell: bash
         run: |
-          cd composeApp/build/compose/binaries/main/app
+          echo "=== Searching for distributable ==="
+          find composeApp/build/compose/binaries -type d -maxdepth 4 2>/dev/null || true
+          APP_DIR=$(find composeApp/build/compose/binaries -type d -name "app" 2>/dev/null | head -1)
+          if [ -z "$APP_DIR" ]; then
+            APP_DIR=$(find composeApp/build/compose/binaries -mindepth 2 -maxdepth 3 -type d 2>/dev/null | head -1)
+          fi
+          echo "Using: $APP_DIR"
+          cd "$APP_DIR"
           powershell Compress-Archive -Path * -DestinationPath "$GITHUB_WORKSPACE/VoiceTranslator-windows.zip"
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
