@@ -46,6 +46,14 @@ actual class SettingsStore {
         }
     }
     
+    actual suspend fun getThemeMode(): String {
+        return localStorage["theme_mode"] ?: "auto"
+    }
+
+    actual suspend fun setThemeMode(mode: String) {
+        localStorage["theme_mode"] = mode
+    }
+
     private fun saveEnabledLanguages(languages: List<Language>) {
         val jsonString = Json.encodeToString(languages)
         localStorage["enabled_languages"] = jsonString

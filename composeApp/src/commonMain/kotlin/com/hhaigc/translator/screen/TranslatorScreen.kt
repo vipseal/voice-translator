@@ -26,6 +26,7 @@ import com.hhaigc.translator.model.Language
 import com.hhaigc.translator.model.TranscriptionResult
 import com.hhaigc.translator.service.AudioRecorder
 import com.hhaigc.translator.service.GeminiService
+import com.hhaigc.translator.service.TtsService
 import com.hhaigc.translator.store.SettingsStore
 import kotlinx.coroutines.launch
 
@@ -39,6 +40,7 @@ fun TranslatorScreen(
     val audioRecorder = remember { AudioRecorder() }
     val geminiService = remember { GeminiService() }
     val settingsStore = remember { SettingsStore() }
+    val ttsService = remember { TtsService() }
     
     var isRecording by remember { mutableStateOf(false) }
     var sourceText by remember { mutableStateOf("") }
@@ -120,6 +122,8 @@ fun TranslatorScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
+            .navigationBarsPadding()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -233,7 +237,10 @@ fun TranslatorScreen(
                             )
                         },
                         onTTS = {
-                            // TODO: Implement TTS via expect/actual platform implementation
+                            val text = translations[language.code]
+                            if (!text.isNullOrEmpty()) {
+                                ttsService.speak(text, language.code)
+                            }
                         }
                     )
                 }

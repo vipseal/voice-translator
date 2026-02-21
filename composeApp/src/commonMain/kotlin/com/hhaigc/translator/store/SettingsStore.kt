@@ -8,4 +8,6 @@ expect class SettingsStore() {
     suspend fun setLanguageEnabled(languageCode: String, enabled: Boolean)
     suspend fun getSourceLanguage(): String
     suspend fun setSourceLanguage(languageCode: String)
+    suspend fun getThemeMode(): String
+    suspend fun setThemeMode(mode: String)
 }

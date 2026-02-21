@@ -16,18 +16,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hhaigc.translator.model.Language
 import com.hhaigc.translator.store.SettingsStore
+import com.hhaigc.translator.theme.ThemeMode
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    currentThemeMode: ThemeMode = ThemeMode.AUTO,
+    onThemeModeChanged: (ThemeMode) -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
     val settingsStore = remember { SettingsStore() }
     var enabledLanguages by remember { mutableStateOf(emptyList<Language>()) }
     
-    // Collect enabled languages
     LaunchedEffect(Unit) {
         settingsStore.getEnabledLanguages().collect { languages ->
             enabledLanguages = languages
@@ -38,6 +40,8 @@ fun SettingsScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
+            .navigationBarsPadding()
             .padding(16.dp)
     ) {
         // Header
@@ -48,9 +52,7 @@ fun SettingsScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBackClick) {
                     Icon(
                         Icons.Default.ArrowBack,
@@ -67,83 +69,112 @@ fun SettingsScreen(
                 )
             }
         }
-        
-        // Language selection section
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            shape = RoundedCornerShape(16.dp)
+
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "Translation Languages",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-                
-                Text(
-                    text = "Select which languages you want to translate to:",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-                
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+            // Theme section
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    items(enabledLanguages) { language ->
-                        LanguageToggleItem(
-                            language = language,
-                            onToggle = { enabled ->
-                                scope.launch {
-                                    settingsStore.setLanguageEnabled(language.code, enabled)
-                                }
-                            }
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Appearance",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(bottom = 12.dp)
                         )
+                        
+                        val options = listOf(
+                            ThemeMode.AUTO to "🔄 Auto (System)",
+                            ThemeMode.LIGHT to "☀️ Light",
+                            ThemeMode.DARK to "🌙 Dark"
+                        )
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            options.forEach { (mode, label) ->
+                                FilterChip(
+                                    selected = currentThemeMode == mode,
+                                    onClick = { onThemeModeChanged(mode) },
+                                    label = { Text(label, fontSize = 13.sp) },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
                     }
                 }
             }
-        }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        // App info
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            ),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "About",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                
-                Text(
-                    text = "VoiceTranslator uses Google Gemini 2.0 Flash for real-time voice transcription and translation.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                
-                Text(
-                    text = "Version 1.0.0",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                )
+            
+            // Language section
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Translation Languages",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Text(
+                            text = "Select which languages you want to translate to:",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                        enabledLanguages.forEach { language ->
+                            LanguageToggleItem(
+                                language = language,
+                                onToggle = { enabled ->
+                                    scope.launch {
+                                        settingsStore.setLanguageEnabled(language.code, enabled)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+            
+            // About section
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "About",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Text(
+                            text = "AI Translator uses Google Gemini 2.0 Flash for real-time voice transcription and translation.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Text(
+                            text = "Version 1.0.0",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        )
+                    }
+                }
             }
         }
     }
@@ -170,7 +201,6 @@ private fun LanguageToggleItem(
                 fontSize = 20.sp,
                 modifier = Modifier.padding(end = 12.dp)
             )
-            
             Column {
                 Text(
                     text = language.name,
@@ -185,7 +215,6 @@ private fun LanguageToggleItem(
                 )
             }
         }
-        
         Switch(
             checked = language.isEnabled,
             onCheckedChange = onToggle,

@@ -30,13 +30,40 @@ private val DarkColorScheme = darkColorScheme(
     outlineVariant = Color(0xFF2A2A3A)
 )
 
+private val LightColorScheme = lightColorScheme(
+    primary = Color(0xFF6200EE),
+    primaryContainer = Color(0xFFEDE0FF),
+    secondary = Color(0xFF625B71),
+    secondaryContainer = Color(0xFFE8DEF8),
+    tertiary = Color(0xFF018786),
+    background = Color(0xFFFFFBFF),
+    surface = Color(0xFFF8F5FF),
+    surfaceVariant = Color(0xFFEEE8F4),
+    onBackground = Color(0xFF1C1B1F),
+    onSurface = Color(0xFF1C1B1F),
+    onSurfaceVariant = Color(0xFF49454E),
+    outline = Color(0xFF7A757F),
+    outlineVariant = Color(0xFFCAC4CF),
+    error = Color(0xFFB3261E),
+    errorContainer = Color(0xFFF9DEDC),
+    onErrorContainer = Color(0xFF410E0B)
+)
+
+enum class ThemeMode { AUTO, DARK, LIGHT }
+
 @Composable
 fun VoiceTranslatorTheme(
-    darkTheme: Boolean = true, // Always dark theme
+    themeMode: ThemeMode = ThemeMode.AUTO,
     content: @Composable () -> Unit
 ) {
+    val isDark = when (themeMode) {
+        ThemeMode.AUTO -> isSystemInDarkTheme()
+        ThemeMode.DARK -> true
+        ThemeMode.LIGHT -> false
+    }
+
     MaterialTheme(
-        colorScheme = DarkColorScheme,
+        colorScheme = if (isDark) DarkColorScheme else LightColorScheme,
         typography = Typography(),
         content = content
     )

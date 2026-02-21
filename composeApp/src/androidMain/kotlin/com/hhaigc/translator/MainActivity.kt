@@ -4,8 +4,10 @@ import android.Manifest
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import com.hhaigc.translator.service.AudioRecorder
+import com.hhaigc.translator.service.TtsService
 import com.hhaigc.translator.store.SettingsStore
 
 class MainActivity : ComponentActivity() {
@@ -17,6 +19,7 @@ class MainActivity : ComponentActivity() {
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         
         // Initialize context-dependent services
@@ -25,6 +28,7 @@ class MainActivity : ComponentActivity() {
             requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
         }
         SettingsStore.initWithContext(this)
+        TtsService.initWithContext(this)
         
         setContent {
             App()

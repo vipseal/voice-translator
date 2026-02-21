@@ -81,20 +81,34 @@ android {
     sourceSets["main"].resources.srcDirs("src/commonMain/resources")
 
     defaultConfig {
-        applicationId = "com.hhaigc.translator"
+        applicationId = "wu.seal.app.aitranslator"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
     }
+    
+    signingConfigs {
+        create("release") {
+            storeFile = file("../keystore.jks")
+            storePassword = "kgduitee"
+            keyAlias = "release"
+            keyPassword = "kgduitee"
+        }
+    }
+    
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
     buildTypes {
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("release")
+        }
         getByName("release") {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -115,7 +129,7 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.hhaigc.translator"
+            packageName = "wu.seal.app.aitranslator"
             packageVersion = "1.0.0"
         }
     }
