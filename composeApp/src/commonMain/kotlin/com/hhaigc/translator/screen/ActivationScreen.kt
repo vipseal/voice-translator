@@ -17,8 +17,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import com.hhaigc.translator.crypto.CryptoUtils
 import com.hhaigc.translator.i18n.AppStrings
+import com.hhaigc.translator.service.SoundService
 import com.hhaigc.translator.store.SettingsStore
 import kotlinx.coroutines.launch
 
@@ -29,6 +32,8 @@ fun ActivationScreen(
     val scope = rememberCoroutineScope()
     val settingsStore = remember { SettingsStore() }
     val s = AppStrings.current
+    val haptic = LocalHapticFeedback.current
+    val soundService = remember { SoundService() }
     var code by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
@@ -134,7 +139,7 @@ fun ActivationScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Button(
-                    onClick = { activate() },
+                    onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); soundService.playClick(); activate() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -155,7 +160,7 @@ fun ActivationScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "v0.0.3",
+                    text = "v${com.hhaigc.translator.BuildVersion.NAME}",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                 )

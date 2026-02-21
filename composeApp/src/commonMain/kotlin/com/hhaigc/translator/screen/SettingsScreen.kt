@@ -14,8 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import com.hhaigc.translator.i18n.AppStrings
 import com.hhaigc.translator.model.Language
+import com.hhaigc.translator.service.SoundService
 import com.hhaigc.translator.store.SettingsStore
 import com.hhaigc.translator.theme.ThemeMode
 import kotlinx.coroutines.launch
@@ -30,6 +33,13 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     val settingsStore = remember { SettingsStore() }
     val s = AppStrings.current
+    val haptic = LocalHapticFeedback.current
+    val soundService = remember { SoundService() }
+    fun withFeedback(action: () -> Unit) {
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        soundService.playClick()
+        action()
+    }
     var enabledLanguages by remember { mutableStateOf(emptyList<Language>()) }
     
     LaunchedEffect(Unit) {
@@ -55,7 +65,7 @@ fun SettingsScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBackClick) {
+                IconButton(onClick = { withFeedback { onBackClick() } }) {
                     Icon(
                         Icons.Default.ArrowBack,
                         contentDescription = "Back",
@@ -104,7 +114,7 @@ fun SettingsScreen(
                             options.forEach { (mode, label) ->
                                 FilterChip(
                                     selected = currentThemeMode == mode,
-                                    onClick = { onThemeModeChanged(mode) },
+                                    onClick = { withFeedback { onThemeModeChanged(mode) } },
                                     label = { Text(label, fontSize = 13.sp) },
                                     modifier = Modifier.weight(1f)
                                 )
@@ -139,8 +149,10 @@ fun SettingsScreen(
                             LanguageToggleItem(
                                 language = language,
                                 onToggle = { enabled ->
-                                    scope.launch {
-                                        settingsStore.setLanguageEnabled(language.code, enabled)
+                                    withFeedback {
+                                        scope.launch {
+                                            settingsStore.setLanguageEnabled(language.code, enabled)
+                                        }
                                     }
                                 }
                             )

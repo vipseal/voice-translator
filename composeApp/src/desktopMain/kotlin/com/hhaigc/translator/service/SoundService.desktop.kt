@@ -8,4 +8,8 @@ actual class SoundService {
     actual fun playStopRecording() {
         // No-op on desktop
     }
+
+    actual fun playClick() {
+        // no-op
+    }
 }

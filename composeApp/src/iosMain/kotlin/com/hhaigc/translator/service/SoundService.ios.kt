@@ -13,4 +13,8 @@ actual class SoundService {
         // System sound 1114 = end recording beep
         AudioServicesPlaySystemSound(1114u)
     }
+
+    actual fun playClick() {
+        // no-op
+    }
 }

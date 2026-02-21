@@ -50,6 +50,12 @@ fun TranslatorScreen(
     val soundService = remember { SoundService() }
     val haptic = LocalHapticFeedback.current
     val s = AppStrings.current
+
+    fun withFeedback(action: () -> Unit) {
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        soundService.playClick()
+        action()
+    }
     
     // Load API key from settings
     LaunchedEffect(Unit) {
@@ -168,7 +174,7 @@ fun TranslatorScreen(
                     fontWeight = FontWeight.Bold
                 )
             }
-            IconButton(onClick = onNavigateToSettings) {
+            IconButton(onClick = { withFeedback { onNavigateToSettings() } }) {
                 Icon(
                     Icons.Default.Settings,
                     contentDescription = s.settings,
@@ -252,13 +258,13 @@ fun TranslatorScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TextButton(onClick = { sourceText = ""; translations = emptyMap(); detectedLanguage = "" }) {
+                        TextButton(onClick = { withFeedback { sourceText = ""; translations = emptyMap(); detectedLanguage = "" } }) {
                             Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(s.clear, fontSize = 12.sp)
                         }
                         FilledTonalButton(
-                            onClick = { translateSourceText() },
+                            onClick = { withFeedback { translateSourceText() } },
                             enabled = !isProcessing,
                             shape = RoundedCornerShape(20.dp),
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
@@ -279,7 +285,7 @@ fun TranslatorScreen(
                 horizontalArrangement = Arrangement.End
             ) {
                 OutlinedButton(
-                    onClick = { copyAllTranslations() },
+                    onClick = { withFeedback { copyAllTranslations() } },
                     shape = RoundedCornerShape(20.dp),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
                 ) {
@@ -306,15 +312,19 @@ fun TranslatorScreen(
                         language = language,
                         translation = translations[language.code] ?: "",
                         onCopy = {
-                            copyToClipboard(
-                                translations[language.code] ?: "",
-                                "${language.flag} ${language.name}"
-                            )
+                            withFeedback {
+                                copyToClipboard(
+                                    translations[language.code] ?: "",
+                                    "${language.flag} ${language.name}"
+                                )
+                            }
                         },
                         onTTS = {
-                            val text = translations[language.code]
-                            if (!text.isNullOrEmpty()) {
-                                ttsService.speak(text, language.code)
+                            withFeedback {
+                                val text = translations[language.code]
+                                if (!text.isNullOrEmpty()) {
+                                    ttsService.speak(text, language.code)
+                                }
                             }
                         }
                     )
@@ -456,7 +466,7 @@ fun TranslatorScreen(
             
             // Clipboard paste button
             FloatingActionButton(
-                onClick = { translateClipboardText() },
+                onClick = { withFeedback { translateClipboardText() } },
                 modifier = Modifier.size(56.dp),
                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
                 contentColor = MaterialTheme.colorScheme.onSurface,

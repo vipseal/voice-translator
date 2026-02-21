@@ -8,4 +8,8 @@ actual class SoundService {
     actual fun playStopRecording() {
         // No-op on web
     }
+
+    actual fun playClick() {
+        // no-op
+    }
 }
