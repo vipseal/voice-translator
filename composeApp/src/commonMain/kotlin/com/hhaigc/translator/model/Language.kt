@@ -11,21 +11,21 @@ data class Language(
 ) {
     companion object {
         val ALL_LANGUAGES = listOf(
-            Language("en", "English", "🇺🇸", isEnabled = true),
-            Language("zh", "中文", "🇨🇳", isEnabled = true),
-            Language("ja", "日本語", "🇯🇵", isEnabled = true),
-            Language("ko", "한국어", "🇰🇷", isEnabled = false),
-            Language("ar", "العربية", "🇸🇦", isEnabled = false),
-            Language("fr", "Français", "🇫🇷", isEnabled = false),
-            Language("de", "Deutsch", "🇩🇪", isEnabled = false),
-            Language("es", "Español", "🇪🇸", isEnabled = false),
-            Language("ru", "Русский", "🇷🇺", isEnabled = false),
-            Language("th", "ไทย", "🇹🇭", isEnabled = true),
-            Language("vi", "Tiếng Việt", "🇻🇳", isEnabled = false),
-            Language("pt", "Português", "🇧🇷", isEnabled = false),
-            Language("hi", "हिन्दी", "🇮🇳", isEnabled = false),
-            Language("id", "Bahasa Indonesia", "🇮🇩", isEnabled = false),
-            Language("tr", "Türkçe", "🇹🇷", isEnabled = false)
+            Language("en", "English", "EN", isEnabled = true),
+            Language("zh", "中文", "ZH", isEnabled = true),
+            Language("ja", "日本語", "JA", isEnabled = true),
+            Language("ko", "한국어", "KO", isEnabled = false),
+            Language("ar", "العربية", "AR", isEnabled = false),
+            Language("fr", "Français", "FR", isEnabled = false),
+            Language("de", "Deutsch", "DE", isEnabled = false),
+            Language("es", "Español", "ES", isEnabled = false),
+            Language("ru", "Русский", "RU", isEnabled = false),
+            Language("th", "ไทย", "TH", isEnabled = true),
+            Language("vi", "Tiếng Việt", "VI", isEnabled = false),
+            Language("pt", "Português", "PT", isEnabled = false),
+            Language("hi", "हिन्दी", "HI", isEnabled = false),
+            Language("id", "Bahasa Indonesia", "ID", isEnabled = false),
+            Language("tr", "Türkçe", "TR", isEnabled = false)
         )
     }
 }
