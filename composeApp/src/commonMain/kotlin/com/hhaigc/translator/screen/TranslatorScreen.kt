@@ -454,11 +454,13 @@ fun TranslatorScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Edit/type button (left)
-            OutlinedIconButton(
+            FilledTonalIconButton(
                 onClick = { withFeedback { showSourceInput = !showSourceInput } },
                 modifier = Modifier.size(44.dp),
-                colors = IconButtonDefaults.outlinedIconButtonColors(
-                    contentColor = if (showSourceInput) MaterialTheme.colorScheme.primary
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = if (showSourceInput) MaterialTheme.colorScheme.primaryContainer
+                                     else MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = if (showSourceInput) MaterialTheme.colorScheme.onPrimaryContainer
                                    else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
@@ -484,9 +486,13 @@ fun TranslatorScreen(
                 )
             }
             // Paste button (right)
-            OutlinedIconButton(
+            FilledTonalIconButton(
                 onClick = { withFeedback { translateClipboardText() } },
-                modifier = Modifier.size(44.dp)
+                modifier = Modifier.size(44.dp),
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             ) {
                 Icon(
                     imageVector = Icons.Default.ContentPaste,
