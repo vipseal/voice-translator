@@ -1,5 +1,6 @@
 package com.hhaigc.translator.screen
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,6 +21,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hhaigc.translator.model.Language
@@ -58,6 +60,7 @@ fun TranslatorScreen(
     var isProcessing by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var statusText by remember { mutableStateOf("Gemini AI 翻译") }
+    var sourceExpanded by remember { mutableStateOf(false) }
     
     // Collect enabled languages
     LaunchedEffect(Unit) {
@@ -162,28 +165,47 @@ fun TranslatorScreen(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 12.dp),
+                .padding(bottom = 12.dp)
+                .then(if (sourceText.isNotEmpty()) Modifier.clickable { sourceExpanded = !sourceExpanded } else Modifier),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant
             ),
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier
+                    .padding(16.dp)
+                    .animateContentSize()
             ) {
-                Text(
-                    text = "原文 / Source",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                    letterSpacing = 1.sp
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "原文 / Source",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        letterSpacing = 1.sp
+                    )
+                    if (sourceText.isNotEmpty()) {
+                        Text(
+                            text = if (sourceExpanded) "▲ 收起" else "▼ 展开",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.height(8.dp))
                 if (sourceText.isNotEmpty()) {
                     Text(
                         text = sourceText,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface,
-                        lineHeight = 24.sp
+                        lineHeight = 24.sp,
+                        maxLines = if (sourceExpanded) Int.MAX_VALUE else 3,
+                        overflow = TextOverflow.Ellipsis
                     )
                     if (detectedLanguage.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(8.dp))
@@ -422,6 +444,8 @@ private fun TranslationCard(
     onCopy: () -> Unit,
     onTTS: () -> Unit
 ) {
+    var expanded by remember { mutableStateOf(false) }
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -435,6 +459,7 @@ private fun TranslationCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp)
+                .animateContentSize()
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -470,8 +495,22 @@ private fun TranslationCard(
                 text = translation,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface,
-                lineHeight = 22.sp
+                lineHeight = 22.sp,
+                maxLines = if (expanded) Int.MAX_VALUE else 4,
+                overflow = TextOverflow.Ellipsis
             )
+            
+            if (translation.length > 120) {
+                Text(
+                    text = if (expanded) "收起 ▲" else "展开 ▼",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .padding(top = 4.dp)
+                        .clickable { expanded = !expanded },
+                    fontSize = 11.sp
+                )
+            }
         }
     }
 }

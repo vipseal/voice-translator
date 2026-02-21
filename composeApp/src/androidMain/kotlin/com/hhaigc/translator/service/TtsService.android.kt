@@ -14,12 +14,23 @@ actual class TtsService {
 
     private var tts: TextToSpeech? = null
     private var isInitialized = false
+    private var pendingText: String? = null
+    private var pendingLanguage: String? = null
 
     private fun ensureInit() {
         if (tts == null) {
             val ctx = appContext ?: return
             tts = TextToSpeech(ctx) { status ->
                 isInitialized = status == TextToSpeech.SUCCESS
+                if (isInitialized) {
+                    val text = pendingText
+                    val lang = pendingLanguage
+                    if (text != null && lang != null) {
+                        pendingText = null
+                        pendingLanguage = null
+                        speak(text, lang)
+                    }
+                }
             }
         }
     }
@@ -27,6 +38,11 @@ actual class TtsService {
     actual fun speak(text: String, languageCode: String) {
         ensureInit()
         val engine = tts ?: return
+        if (!isInitialized) {
+            pendingText = text
+            pendingLanguage = languageCode
+            return
+        }
         val locale = languageCodeToLocale(languageCode)
         engine.language = locale
         engine.speak(text, TextToSpeech.QUEUE_FLUSH, null, "tts_${System.currentTimeMillis()}")
