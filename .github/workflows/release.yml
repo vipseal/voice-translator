@@ -80,12 +80,34 @@ jobs:
         shell: bash
         run: find . -name "GeminiService.kt" -exec sed -i 's/GEMINI_API_KEY_PLACEHOLDER/${{ secrets.GEMINI_API_KEY }}/g' {} +
       - name: Build Windows Uber JAR
-        run: ./gradlew :composeApp:packageUberJarForCurrentOS
+        run: |
+          ./gradlew :composeApp:packageUberJarForCurrentOS
+          echo "=== Finding JAR output ==="
+          find composeApp/build -name "*.jar" -not -path "*/gradle-wrapper*" -not -path "*/tmp/*" -not -path "*/classes/*" 2>/dev/null | head -20
+        shell: bash
+      - name: Locate and copy JAR
+        shell: bash
+        run: |
+          JAR=$(find composeApp/build -name "*uber*" -o -name "*all*" -o -name "*desktop*" 2>/dev/null | grep "\.jar$" | head -1)
+          if [ -z "$JAR" ]; then
+            JAR=$(find composeApp/build/compose -name "*.jar" 2>/dev/null | head -1)
+          fi
+          if [ -z "$JAR" ]; then
+            JAR=$(find composeApp/build -name "*.jar" -not -path "*/gradle-wrapper*" -not -path "*/tmp/*" -not -path "*/classes/*" -not -path "*/kotlin-tooling*" 2>/dev/null | sort -k5 -t/ | tail -1)
+          fi
+          if [ -n "$JAR" ]; then
+            echo "Found JAR: $JAR"
+            cp "$JAR" VoiceTranslator-windows.jar
+          else
+            echo "No JAR found, listing all build outputs:"
+            find composeApp/build -maxdepth 4 -type f -name "*.jar" 2>/dev/null
+          fi
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
           name: desktop-windows
-          path: composeApp/build/compose/jars/*.jar
+          path: VoiceTranslator-windows.jar
+          if-no-files-found: warn
 
   build-ios:
     runs-on: macos-latest
