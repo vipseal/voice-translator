@@ -81,7 +81,7 @@ jobs:
         run: find . -name "GeminiService.kt" -exec sed -i 's/GEMINI_API_KEY_PLACEHOLDER/${{ secrets.GEMINI_API_KEY }}/g' {} +
       - name: Build Windows MSI
         shell: cmd
-        run: .\gradlew.bat :composeApp:packageMsi --no-build-cache --rerun-tasks
+        run: call gradlew.bat :composeApp:packageMsi --no-build-cache --rerun-tasks
       - name: List build output
         shell: cmd
         run: dir /s /b composeApp\build\compose\binaries\
