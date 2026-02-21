@@ -223,6 +223,65 @@ class GeminiService(
         }
     }
     
+    /**
+     * Voice-to-translation in ONE call: audio → detect language + transcribe + translate all at once.
+     */
+    @OptIn(ExperimentalEncodingApi::class)
+    suspend fun transcribeAndTranslate(audioBytes: ByteArray, targetLanguages: List<String>): Result<Pair<TranscriptionResult, Map<String, String>>> {
+        return try {
+            val base64Audio = Base64.encode(audioBytes)
+            val langList = targetLanguages.joinToString(", ")
+            
+            val request = GeminiRequest(
+                contents = listOf(
+                    Content(
+                        parts = listOf(
+                            Part(
+                                inline_data = InlineData(
+                                    mime_type = "audio/wav",
+                                    data = base64Audio
+                                )
+                            ),
+                            Part(
+                                text = """
+                                    Listen to this audio. Detect the language, transcribe it, and translate to these languages: $langList
+                                    
+                                    Respond ONLY in JSON: {"text": "transcribed text", "detectedLang": "language name", "detectedCode": "ISO code", "translations": {"en": "...", "zh": "...", ...}}
+                                    If source matches a target language, keep the transcription as-is for that language. Only output JSON.
+                                """.trimIndent()
+                            )
+                        )
+                    )
+                ),
+                generationConfig = GenerationConfig(temperature = 0.1f)
+            )
+            
+            val response: GeminiResponse = client.post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent") {
+                parameter("key", apiKey)
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }.body()
+            
+            val responseText = response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text
+                ?: return Result.failure(Exception("No response received"))
+            
+            val cleaned = cleanJsonResponse(responseText)
+            val jsonObj = json.parseToJsonElement(cleaned).jsonObject
+            
+            val text = jsonObj["text"]?.jsonPrimitive?.contentOrNull ?: ""
+            val detectedLang = jsonObj["detectedLang"]?.jsonPrimitive?.contentOrNull ?: "Unknown"
+            val detectedCode = jsonObj["detectedCode"]?.jsonPrimitive?.contentOrNull ?: "und"
+            val translationsObj = jsonObj["translations"]?.jsonObject ?: return Result.failure(Exception("No translations"))
+            
+            val translations = translationsObj.mapValues { it.value.jsonPrimitive.content }
+            val transcription = TranscriptionResult(text = text, lang = detectedLang, langCode = detectedCode)
+            
+            Result.success(Pair(transcription, translations))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
     fun cleanup() {
         client.close()
     }

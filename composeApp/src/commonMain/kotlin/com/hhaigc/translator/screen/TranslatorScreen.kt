@@ -159,31 +159,20 @@ fun TranslatorScreen(
                 try {
                     val audioData = audioRecorder.stopRecording()
                     if (audioData != null) {
-                        val transcriptionResult = geminiService.transcribeAudio(audioData)
-                        transcriptionResult.fold(
-                            onSuccess = { transcription ->
+                        setStatus(s.translating)
+                        val targetLanguages = enabledLanguages.map { it.code }
+                        val result = geminiService.transcribeAndTranslate(audioData, targetLanguages)
+                        result.fold(
+                            onSuccess = { (transcription, translationsMap) ->
                                 sourceText = transcription.text
                                 detectedLanguage = transcription.lang
-
-                                setStatus(s.translating)
-                                val targetLanguages = enabledLanguages.map { it.code }
-                                val translationResult = geminiService.translateText(transcription.text, targetLanguages)
-
-                                translationResult.fold(
-                                    onSuccess = { translationsMap ->
-                                        translations = translationsMap
-                                        setStatus(s.translateDone)
-                                        showSourceInput = false
-                                    },
-                                    onFailure = { exception ->
-                                        error = s.errorTranslationFailed
-                                        setStatus(s.translateFailed)
-                                    }
-                                )
+                                translations = translationsMap
+                                setStatus(s.translateDone)
+                                showSourceInput = false
                             },
                             onFailure = { exception ->
-                                error = s.errorVoiceRecognition
-                                setStatus(s.recognitionFailed)
+                                error = s.errorTranslationFailed
+                                setStatus(s.translateFailed)
                             }
                         )
                     } else {

@@ -225,34 +225,28 @@ function updateRecordUI() {
 }
 
 async function processAudio() {
-    setStatus('🔄 正在识别语音...');
+    setStatus('🔄 正在识别并翻译...');
     const blob = new Blob(audioChunks, { type: getSupportedMime() || 'audio/webm' });
     
     try {
         const b64 = await blobToBase64(blob);
         const mimeType = blob.type || 'audio/webm';
-        
-        // Step 1: Transcribe
-        const transcription = await transcribeAudio(b64, mimeType);
-        if (!transcription) throw new Error('无法识别语音');
-        
-        document.getElementById('sourceText').textContent = transcription.text;
-        document.getElementById('sourceText').classList.remove('placeholder');
-        
-        if (transcription.lang) {
-            const dl = document.getElementById('detectedLang');
-            dl.textContent = '🔍 ' + transcription.lang;
-            dl.style.display = 'inline-block';
-        }
-        
-        // Step 2: Translate
-        setStatus('🌍 正在翻译...');
         const enabled = getEnabledLangs();
         showTranslationPlaceholders(enabled);
         
-        const translations = await translateText(transcription.text, transcription.langCode, enabled);
-        showTranslations(translations, enabled);
+        // Single call: voice → transcribe + translate
+        const result = await transcribeAndTranslate(b64, mimeType, enabled);
         
+        document.getElementById('sourceText').textContent = result.text;
+        document.getElementById('sourceText').classList.remove('placeholder');
+        
+        if (result.detectedLang) {
+            const dl = document.getElementById('detectedLang');
+            dl.textContent = '🔍 ' + result.detectedLang;
+            dl.style.display = 'inline-block';
+        }
+        
+        showTranslations(result.translations, enabled);
         setStatus('✅ 翻译完成');
     } catch (e) {
         setStatus('❌ ' + e.message);
@@ -260,6 +254,28 @@ async function processAudio() {
         isProcessing = false;
         updateRecordUI();
     }
+}
+
+async function transcribeAndTranslate(b64, mimeType, targetLangs) {
+    const langList = targetLangs.map(l => l.code).join(', ');
+    const resp = await fetch(GEMINI_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [
+                { inlineData: { mimeType, data: b64 } },
+                { text: `Listen to this audio. Detect the language, transcribe it, and translate to these languages: ${langList}\n\nRespond ONLY in JSON: {"text": "transcribed text", "detectedLang": "language name", "detectedCode": "ISO code", "translations": {"en": "...", "zh": "...", ...}}\nIf source matches a target language, keep the transcription as-is. Only output JSON.` }
+            ]}],
+            generationConfig: { temperature: 0.1 }
+        })
+    });
+    
+    const data = await resp.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error('识别失败');
+    
+    const cleaned = text.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+    return JSON.parse(cleaned);
 }
 
 function blobToBase64(blob) {
