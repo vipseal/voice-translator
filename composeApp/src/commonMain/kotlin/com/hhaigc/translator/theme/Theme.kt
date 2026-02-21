@@ -4,13 +4,9 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
-import org.jetbrains.compose.resources.Font
-import voicetranslator.composeapp.generated.resources.Res
-import voicetranslator.composeapp.generated.resources.droid_sans_fallback
-import voicetranslator.composeapp.generated.resources.noto_sans_arabic
-import voicetranslator.composeapp.generated.resources.noto_sans_devanagari
-import voicetranslator.composeapp.generated.resources.noto_sans_thai
+
+@Composable
+expect fun platformTypography(): Typography
 // Custom colors
 private val DarkBackground = Color(0xFF0F0F1A)
 private val DarkSurface = Color(0xFF1A1A2E)
@@ -68,34 +64,9 @@ fun VoiceTranslatorTheme(
         ThemeMode.LIGHT -> false
     }
 
-    val fontFamily = FontFamily(
-        Font(Res.font.droid_sans_fallback),
-        Font(Res.font.noto_sans_thai),
-        Font(Res.font.noto_sans_arabic),
-        Font(Res.font.noto_sans_devanagari),
-    )
-    val defaultTypography = Typography()
-    val typography = Typography(
-        displayLarge = defaultTypography.displayLarge.copy(fontFamily = fontFamily),
-        displayMedium = defaultTypography.displayMedium.copy(fontFamily = fontFamily),
-        displaySmall = defaultTypography.displaySmall.copy(fontFamily = fontFamily),
-        headlineLarge = defaultTypography.headlineLarge.copy(fontFamily = fontFamily),
-        headlineMedium = defaultTypography.headlineMedium.copy(fontFamily = fontFamily),
-        headlineSmall = defaultTypography.headlineSmall.copy(fontFamily = fontFamily),
-        titleLarge = defaultTypography.titleLarge.copy(fontFamily = fontFamily),
-        titleMedium = defaultTypography.titleMedium.copy(fontFamily = fontFamily),
-        titleSmall = defaultTypography.titleSmall.copy(fontFamily = fontFamily),
-        bodyLarge = defaultTypography.bodyLarge.copy(fontFamily = fontFamily),
-        bodyMedium = defaultTypography.bodyMedium.copy(fontFamily = fontFamily),
-        bodySmall = defaultTypography.bodySmall.copy(fontFamily = fontFamily),
-        labelLarge = defaultTypography.labelLarge.copy(fontFamily = fontFamily),
-        labelMedium = defaultTypography.labelMedium.copy(fontFamily = fontFamily),
-        labelSmall = defaultTypography.labelSmall.copy(fontFamily = fontFamily),
-    )
-
     MaterialTheme(
         colorScheme = if (isDark) DarkColorScheme else LightColorScheme,
-        typography = typography,
+        typography = platformTypography(),
         content = content
     )
 }
