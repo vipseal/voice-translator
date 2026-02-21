@@ -1,39 +1,61 @@
-# 🌐 VoiceTranslator (语音翻译)
+# VoiceTranslator
 
-A Kotlin Multiplatform voice translation app powered by Gemini AI.
+AI-powered voice & text translator built with Kotlin Multiplatform + Compose.
 
 ## Features
-- 🎤 Voice recording with real-time transcription
-- 🌍 Translate to 15+ languages simultaneously
-- 📋 Clipboard text translation
-- ⚙️ Customizable language settings
-- 🔊 Text-to-speech playback
+
+- **Voice Translation** — Record speech, auto-detect language, translate to multiple languages simultaneously
+- **Text Translation** — Paste from clipboard for instant translation
+- **Text-to-Speech** — Listen to translations in native pronunciation
+- **Multi-language UI** — App interface auto-adapts to device language (EN/ZH/TH/JA/KO/AR/FR/ES)
+- **Dark/Light Mode** — Auto or manual theme switching
+- **Activation System** — Secure API key encryption with activation code
 
 ## Platforms
-- 📱 Android (Compose)
-- 🍎 iOS (Compose/SwiftUI)
-- 🖥️ Desktop (Compose - Windows/macOS/Linux)
-- 🌐 Web (WASM)
+
+| Platform | Format |
+|----------|--------|
+| Android | APK (signed) |
+| iOS | Framework |
+| Windows | MSI |
+| macOS | DMG |
+| Linux | DEB |
+| Web | HTML |
 
 ## Tech Stack
-- Kotlin 2.1.0
-- Compose Multiplatform 1.7.3
-- Ktor Client
-- Gemini 2.5 Flash API
-- kotlinx.serialization
+
+- Kotlin 2.2.20
+- Compose Multiplatform 1.10.1
+- Ktor 3.1.1
+- Gemini 2.5 Flash
+- Material Design 3
 
 ## Build
 
 ```bash
-# Android APK
-./gradlew :composeApp:assembleDebug
+# Android Release
+./gradlew :composeApp:assembleRelease
 
 # Desktop
 ./gradlew :composeApp:run
 
-# Web
-./gradlew :composeApp:wasmJsBrowserDistribution
+# macOS DMG
+./gradlew :composeApp:packageDmg
+
+# Windows MSI
+gradlew.bat :composeApp:packageMsi
+
+# Linux DEB
+./gradlew :composeApp:packageDeb
+
+# iOS Framework
+./gradlew :composeApp:linkReleaseFrameworkIosArm64
 ```
 
+## CI/CD
+
+Tag `v*` triggers GitHub Actions — builds all platforms and creates a GitHub Release with artifacts.
+
 ## License
+
 Private
