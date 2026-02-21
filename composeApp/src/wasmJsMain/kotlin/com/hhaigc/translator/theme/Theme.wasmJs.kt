@@ -5,7 +5,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontFamily
 import org.jetbrains.compose.resources.Font
 import voicetranslator.composeapp.generated.resources.Res
+import voicetranslator.composeapp.generated.resources.noto_sans
 import voicetranslator.composeapp.generated.resources.droid_sans_fallback
+import voicetranslator.composeapp.generated.resources.noto_sans_kr
 import voicetranslator.composeapp.generated.resources.noto_sans_arabic
 import voicetranslator.composeapp.generated.resources.noto_sans_devanagari
 import voicetranslator.composeapp.generated.resources.noto_sans_thai
@@ -13,10 +15,12 @@ import voicetranslator.composeapp.generated.resources.noto_sans_thai
 @Composable
 actual fun platformTypography(): Typography {
     val fontFamily = FontFamily(
-        Font(Res.font.droid_sans_fallback),
-        Font(Res.font.noto_sans_thai),
-        Font(Res.font.noto_sans_arabic),
-        Font(Res.font.noto_sans_devanagari),
+        Font(Res.font.noto_sans),              // Latin, Cyrillic, Vietnamese, Turkish
+        Font(Res.font.droid_sans_fallback),     // CJK (Chinese, Japanese)
+        Font(Res.font.noto_sans_kr),            // Korean Hangul
+        Font(Res.font.noto_sans_thai),          // Thai
+        Font(Res.font.noto_sans_arabic),        // Arabic
+        Font(Res.font.noto_sans_devanagari),    // Hindi/Devanagari
     )
     val d = Typography()
     return Typography(

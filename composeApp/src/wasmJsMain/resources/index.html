@@ -36,9 +36,18 @@
         window.addEventListener('load', () => {
             clearInterval(interval);
             progressEl.style.width = '100%';
-            textEl.textContent = 'Ready!';
-            setTimeout(() => { document.getElementById('loading').style.display = 'none'; }, 500);
+            textEl.textContent = 'Starting...';
         });
+        // Hide loading only when Compose canvas is actually rendered
+        function checkCanvas() {
+            const canvas = document.querySelector('canvas');
+            if (canvas) {
+                document.getElementById('loading').style.display = 'none';
+            } else {
+                requestAnimationFrame(checkCanvas);
+            }
+        }
+        requestAnimationFrame(checkCanvas);
     </script>
     <script src="voicetranslator.js"></script>
 </body>
