@@ -104,8 +104,10 @@ object CryptoUtils {
                 if (result.startsWith("AIza") && result.length > 30) {
                     return result
                 }
+                return null
         } catch (_: Exception) {
             return null
         }
+        return null
     }
 }
