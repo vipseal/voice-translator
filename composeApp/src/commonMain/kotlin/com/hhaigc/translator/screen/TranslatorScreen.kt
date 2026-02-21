@@ -16,8 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import com.hhaigc.translator.service.ClipboardService
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -42,7 +42,7 @@ fun TranslatorScreen(
     onNavigateToSettings: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
-    val clipboardManager = LocalClipboardManager.current
+    val clipboardService = remember { ClipboardService() }
     val audioRecorder = remember { AudioRecorder() }
     val settingsStore = remember { SettingsStore() }
     val geminiService = remember { GeminiService() }
@@ -86,7 +86,7 @@ fun TranslatorScreen(
     fun setStatus(text: String) { statusText = text }
     
     fun copyToClipboard(text: String, label: String = "") {
-        clipboardManager.setText(AnnotatedString(text))
+        clipboardService.writeText(text)
         if (label.isNotEmpty()) {
             statusText = "${s.copiedLabel} $label"
         }
@@ -138,12 +138,13 @@ fun TranslatorScreen(
     }
 
     fun translateClipboardText() {
-        val clipText = clipboardManager.getText()?.text
-        if (clipText.isNullOrBlank()) {
-            setStatus(s.clipboardEmpty)
-            return
+        clipboardService.readText { clipText ->
+            if (clipText.isNullOrBlank()) {
+                setStatus(s.clipboardEmpty)
+            } else {
+                translateSourceText(clipText)
+            }
         }
-        translateSourceText(clipText)
     }
 
     fun startOrStopRecording() {

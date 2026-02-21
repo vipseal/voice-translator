@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import com.hhaigc.translator.service.AudioRecorder
+import com.hhaigc.translator.service.ClipboardService
 import com.hhaigc.translator.service.TtsService
 import com.hhaigc.translator.store.SettingsStore
 
@@ -29,6 +30,7 @@ class MainActivity : ComponentActivity() {
         }
         SettingsStore.initWithContext(this)
         TtsService.initWithContext(this)
+        ClipboardService.init(this)
         
         setContent {
             App()
