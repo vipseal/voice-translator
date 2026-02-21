@@ -3,7 +3,6 @@ package com.hhaigc.translator.service
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
-import java.io.File
 import javax.sound.sampled.*
 
 actual class AudioRecorder {
@@ -71,14 +70,26 @@ actual class AudioRecorder {
             // Wait for recording thread to finish
             recordingThread?.join(1000)
             
-            targetDataLine?.stop()
-            targetDataLine?.close()
+            val line = targetDataLine
+            line?.stop()
+            line?.close()
             targetDataLine = null
             
-            val recordedData = audioData.toByteArray()
+            val pcmData = audioData.toByteArray()
             audioData.close()
             
-            recordedData.takeIf { it.isNotEmpty() }
+            if (pcmData.isEmpty()) return@withContext null
+            
+            // Wrap raw PCM in WAV format for Gemini compatibility
+            val wavOutput = ByteArrayOutputStream()
+            val audioFormat = AudioFormat(44100.0f, 16, 1, true, false)
+            val audioInputStream = AudioInputStream(
+                pcmData.inputStream(),
+                audioFormat,
+                pcmData.size.toLong() / audioFormat.frameSize
+            )
+            AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, wavOutput)
+            wavOutput.toByteArray()
         } catch (e: Exception) {
             isCurrentlyRecording = false
             targetDataLine?.close()

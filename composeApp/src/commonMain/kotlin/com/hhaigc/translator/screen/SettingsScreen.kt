@@ -107,17 +107,18 @@ fun SettingsScreen(
                             ThemeMode.DARK to s.themeDark
                         )
                         
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        SingleChoiceSegmentedButtonRow(
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            options.forEach { (mode, label) ->
-                                FilterChip(
+                            options.forEachIndexed { index, (mode, label) ->
+                                SegmentedButton(
                                     selected = currentThemeMode == mode,
                                     onClick = { withFeedback { onThemeModeChanged(mode) } },
-                                    label = { Text(label, fontSize = 13.sp) },
-                                    modifier = Modifier.weight(1f)
-                                )
+                                    shape = SegmentedButtonDefaults.itemShape(index, options.size),
+                                    icon = {}
+                                ) {
+                                    Text(label, fontSize = 13.sp)
+                                }
                             }
                         }
                     }

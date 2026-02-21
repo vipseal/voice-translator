@@ -136,8 +136,19 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "wu.seal.app.aitranslator"
+            packageName = "VoiceTranslator"
             packageVersion = "1.0.0"
+            
+            macOS {
+                bundleID = "wu.seal.app.aitranslator"
+                infoPlist {
+                    extraKeysRawXml = """
+                        <key>NSMicrophoneUsageDescription</key>
+                        <string>VoiceTranslator needs microphone access for voice recording and translation.</string>
+                    """.trimIndent()
+                }
+                entitlementsFile.set(project.file("src/desktopMain/resources/entitlements.plist"))
+            }
         }
     }
 }
