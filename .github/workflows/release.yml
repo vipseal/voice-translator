@@ -121,8 +121,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          validate-wrappers: false
+      - name: Build WASM Distribution
+        run: ./gradlew :composeApp:wasmJsBrowserDistribution
       - name: Package Web App
-        run: cd web && zip -r ../VoiceTranslator-web.zip .
+        run: cd composeApp/build/dist/wasmJs/productionExecutable && zip -r $GITHUB_WORKSPACE/VoiceTranslator-web.zip .
       - name: Upload Web App
         uses: actions/upload-artifact@v4
         with:

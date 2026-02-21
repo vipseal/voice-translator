@@ -20,6 +20,16 @@ kotlin {
     
     jvm("desktop")
     
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+    wasmJs {
+        browser {
+            commonWebpackConfig {
+                outputFileName = "voicetranslator.js"
+            }
+        }
+        binaries.executable()
+    }
+    
     listOf(
         iosX64(),
         iosArm64(),
@@ -69,6 +79,11 @@ kotlin {
             implementation(libs.ktor.client.darwin)
         }
         
+        val wasmJsMain by getting {
+            dependencies {
+                implementation(libs.ktor.client.js)
+            }
+        }
     }
 }
 
