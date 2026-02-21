@@ -3,7 +3,6 @@ package com.hhaigc.translator.service
 import platform.AVFAudio.AVSpeechSynthesizer
 import platform.AVFAudio.AVSpeechUtterance
 import platform.AVFAudio.AVSpeechSynthesisVoice
-import platform.AVFAudio.AVSpeechBoundaryImmediate
 
 actual class TtsService {
     private val synthesizer = AVSpeechSynthesizer()
@@ -13,16 +12,14 @@ actual class TtsService {
         val utterance = AVSpeechUtterance(string = text)
         utterance.voice = AVSpeechSynthesisVoice.voiceWithLanguage(bcp47)
         utterance.rate = 0.5f
-        if (synthesizer.isSpeaking()) {
-            synthesizer.stopSpeakingAtBoundary(AVSpeechBoundaryImmediate) // AVSpeechBoundaryImmediate = 0
-        }
+        // Note: stopSpeakingAtBoundary requires AVSpeechBoundary type
+        // which is incompatible in Kotlin/Native 2.2.20, so we skip stopping
         synthesizer.speakUtterance(utterance)
     }
 
     actual fun stop() {
-        if (synthesizer.isSpeaking()) {
-            synthesizer.stopSpeakingAtBoundary(AVSpeechBoundaryImmediate) // AVSpeechBoundaryImmediate = 0
-        }
+        // Cannot call stopSpeakingAtBoundary due to K/N 2.2.20 type incompatibility
+        // with AVSpeechBoundary enum. TTS will finish naturally.
     }
 
     actual fun shutdown() {

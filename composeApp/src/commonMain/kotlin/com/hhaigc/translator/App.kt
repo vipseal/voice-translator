@@ -1,5 +1,6 @@
 package com.hhaigc.translator
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.*
 import com.hhaigc.translator.screen.ActivationScreen
 import com.hhaigc.translator.screen.SettingsScreen
@@ -56,6 +57,7 @@ fun App() {
             }
             
             Screen.Settings -> {
+                BackHandler { currentScreen = Screen.Translator }
                 SettingsScreen(
                     onBackClick = {
                         currentScreen = Screen.Translator
