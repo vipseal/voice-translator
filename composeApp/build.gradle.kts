@@ -145,7 +145,7 @@ compose.desktop {
                 bundleID = "wu.seal.app.aitranslator"
                 appStore = false
                 dockName = "VoiceTranslator"
-                iconFile.set(project.file("src/desktopMain/resources/icon.png"))
+                iconFile.set(project.file("src/desktopMain/resources/icon.icns"))
                 infoPlist {
                     extraKeysRawXml = """
                         <key>NSMicrophoneUsageDescription</key>
@@ -156,7 +156,7 @@ compose.desktop {
             }
             
             windows {
-                iconFile.set(project.file("src/desktopMain/resources/icon.png"))
+                iconFile.set(project.file("src/desktopMain/resources/icon.ico"))
             }
             
             linux {
