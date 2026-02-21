@@ -146,12 +146,21 @@ fun TranslatorScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = s.appTitle,
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Translate,
+                    contentDescription = null,
+                    modifier = Modifier.size(28.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = s.appTitle,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
             IconButton(onClick = onNavigateToSettings) {
                 Icon(
                     Icons.Default.Settings,
@@ -191,12 +200,20 @@ fun TranslatorScreen(
                         letterSpacing = 1.sp
                     )
                     if (sourceText.isNotEmpty()) {
-                        Text(
-                            text = if (sourceExpanded) "▲ ${s.collapse}" else "▼ ${s.expand}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontSize = 11.sp
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = if (sourceExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = if (sourceExpanded) s.collapse else s.expand,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = if (sourceExpanded) s.collapse else s.expand,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontSize = 11.sp
+                            )
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
@@ -246,6 +263,12 @@ fun TranslatorScreen(
                     shape = RoundedCornerShape(20.dp),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
                 ) {
+                    Icon(
+                        imageVector = Icons.Default.ContentCopy,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(s.copyAllButton, fontSize = 12.sp)
                 }
             }
@@ -400,9 +423,10 @@ fun TranslatorScreen(
                 contentColor = Color.White,
                 shape = CircleShape
             ) {
-                Text(
-                    text = if (isRecording) "⏹" else "🎤",
-                    fontSize = 28.sp
+                Icon(
+                    imageVector = if (isRecording) Icons.Default.Stop else Icons.Default.Mic,
+                    contentDescription = if (isRecording) "Stop" else "Record",
+                    modifier = Modifier.size(32.dp)
                 )
             }
             
@@ -414,9 +438,10 @@ fun TranslatorScreen(
                 contentColor = MaterialTheme.colorScheme.onSurface,
                 shape = CircleShape
             ) {
-                Text(
-                    text = "📋",
-                    fontSize = 22.sp
+                Icon(
+                    imageVector = Icons.Default.ContentPaste,
+                    contentDescription = "Paste",
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
@@ -481,13 +506,23 @@ private fun TranslationCard(
                         onClick = onCopy,
                         modifier = Modifier.size(32.dp)
                     ) {
-                        Text("📄", fontSize = 16.sp)
+                        Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = "Copy",
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
                     }
                     IconButton(
                         onClick = onTTS,
                         modifier = Modifier.size(32.dp)
                     ) {
-                        Text("🔊", fontSize = 16.sp)
+                        Icon(
+                            imageVector = Icons.Default.VolumeUp,
+                            contentDescription = "Play",
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
                     }
                 }
             }
@@ -504,15 +539,25 @@ private fun TranslationCard(
             )
             
             if (translation.length > 120) {
-                Text(
-                    text = if (expanded) "${s.collapse} ▲" else "${s.expand} ▼",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .padding(top = 4.dp)
-                        .clickable { expanded = !expanded },
-                    fontSize = 11.sp
-                )
+                        .clickable { expanded = !expanded }
+                ) {
+                    Text(
+                        text = if (expanded) s.collapse else s.expand,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 11.sp
+                    )
+                    Icon(
+                        imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     }
