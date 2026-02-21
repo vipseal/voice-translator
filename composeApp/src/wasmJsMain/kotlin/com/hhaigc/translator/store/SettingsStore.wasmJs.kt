@@ -6,14 +6,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-private fun storageGet(key: String): String? {
-    val result = js("localStorage.getItem(key)")
-    return result?.toString()
-}
+@JsFun("function(key) { return localStorage.getItem(key); }")
+private external fun jsStorageGet(key: String): String?
 
-private fun storageSet(key: String, value: String) {
-    js("localStorage.setItem(key, value)")
-}
+@JsFun("function(key, value) { localStorage.setItem(key, value); }")
+private external fun jsStorageSet(key: String, value: String)
 
 actual class SettingsStore {
     private val _enabledLanguages = MutableStateFlow(loadEnabledLanguages())
@@ -30,40 +27,17 @@ actual class SettingsStore {
         }
     }
     
-    actual suspend fun getSourceLanguage(): String {
-        return storageGet("source_language") ?: "en"
-    }
-    
-    actual suspend fun setSourceLanguage(languageCode: String) {
-        storageSet("source_language", languageCode)
-    }
-    
-    actual suspend fun getThemeMode(): String {
-        return storageGet("theme_mode") ?: "auto"
-    }
-
-    actual suspend fun setThemeMode(mode: String) {
-        storageSet("theme_mode", mode)
-    }
-
-    actual suspend fun isActivated(): Boolean {
-        return storageGet("activated") == "true"
-    }
-
-    actual suspend fun setActivated(activated: Boolean) {
-        storageSet("activated", activated.toString())
-    }
-
-    actual suspend fun getApiKey(): String {
-        return storageGet("api_key") ?: ""
-    }
-
-    actual suspend fun setApiKey(key: String) {
-        storageSet("api_key", key)
-    }
+    actual suspend fun getSourceLanguage(): String = jsStorageGet("source_language") ?: "en"
+    actual suspend fun setSourceLanguage(languageCode: String) { jsStorageSet("source_language", languageCode) }
+    actual suspend fun getThemeMode(): String = jsStorageGet("theme_mode") ?: "auto"
+    actual suspend fun setThemeMode(mode: String) { jsStorageSet("theme_mode", mode) }
+    actual suspend fun isActivated(): Boolean = jsStorageGet("activated") == "true"
+    actual suspend fun setActivated(activated: Boolean) { jsStorageSet("activated", activated.toString()) }
+    actual suspend fun getApiKey(): String = jsStorageGet("api_key") ?: ""
+    actual suspend fun setApiKey(key: String) { jsStorageSet("api_key", key) }
 
     private fun loadEnabledLanguages(): List<Language> {
-        val saved = storageGet("enabled_languages")
+        val saved = jsStorageGet("enabled_languages")
         return if (saved != null) {
             try { Json.decodeFromString<List<Language>>(saved) } catch (_: Exception) { Language.ALL_LANGUAGES }
         } else {
@@ -72,6 +46,6 @@ actual class SettingsStore {
     }
 
     private fun saveEnabledLanguages(languages: List<Language>) {
-        storageSet("enabled_languages", Json.encodeToString(languages))
+        jsStorageSet("enabled_languages", Json.encodeToString(languages))
     }
 }
