@@ -6,7 +6,7 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 object CryptoUtils {
     // Encrypted API key: Base64(XOR(apiKey, SHA256(activationCode)))
     // Activation code "kgduitee" was used to encrypt
-    private val encryptedKeyBase64 = "flxBn8dEHU/+8QUQ6b9qN9stXpf2jZrjXJiELrHH47kOQmSo40lr"
+    private val encryptedKeyBase64 = "flxBn8dEGyf14VcT2NpANt0+fpnN/5eHXb2EAJPkhMBWXmqm9gU4"
 
     /**
      * Simple SHA-256 implementation (pure Kotlin, no dependencies).
