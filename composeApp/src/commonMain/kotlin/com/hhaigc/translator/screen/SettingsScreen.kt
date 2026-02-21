@@ -1,6 +1,7 @@
 package com.hhaigc.translator.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,6 +11,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -107,17 +110,34 @@ fun SettingsScreen(
                             ThemeMode.DARK to s.themeDark
                         )
                         
-                        SingleChoiceSegmentedButtonRow(
-                            modifier = Modifier.fillMaxWidth()
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
-                            options.forEachIndexed { index, (mode, label) ->
-                                SegmentedButton(
-                                    selected = currentThemeMode == mode,
-                                    onClick = { withFeedback { onThemeModeChanged(mode) } },
-                                    shape = SegmentedButtonDefaults.itemShape(index, options.size),
-                                    icon = {}
+                            options.forEach { (mode, label) ->
+                                val selected = currentThemeMode == mode
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(
+                                            if (selected) MaterialTheme.colorScheme.primary
+                                            else Color.Transparent
+                                        )
+                                        .clickable { withFeedback { onThemeModeChanged(mode) } }
+                                        .padding(vertical = 10.dp),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Text(label, fontSize = 13.sp)
+                                    Text(
+                                        text = label,
+                                        fontSize = 13.sp,
+                                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                                        color = if (selected) MaterialTheme.colorScheme.onPrimary
+                                               else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
                             }
                         }
