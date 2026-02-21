@@ -18,8 +18,6 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           validate-wrappers: false
-      - name: Set Gemini API Key
-        run: find . -name "GeminiService.kt" -exec sed -i 's/GEMINI_API_KEY_PLACEHOLDER/${{ secrets.GEMINI_API_KEY }}/g' {} +
       - name: Decode Keystore
         run: |
           if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
@@ -46,8 +44,6 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           validate-wrappers: false
-      - name: Set Gemini API Key
-        run: find . -name "GeminiService.kt" -exec sed -i 's/GEMINI_API_KEY_PLACEHOLDER/${{ secrets.GEMINI_API_KEY }}/g' {} +
       - name: Build Linux DEB
         run: ./gradlew :composeApp:packageDeb
       - name: Upload Linux DEB
@@ -67,8 +63,6 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           validate-wrappers: false
-      - name: Set Gemini API Key
-        run: find . -name "GeminiService.kt" -exec sed -i '' 's/GEMINI_API_KEY_PLACEHOLDER/${{ secrets.GEMINI_API_KEY }}/g' {} +
       - name: Build macOS DMG
         run: ./gradlew :composeApp:packageDmg
       - name: Upload macOS DMG
@@ -88,8 +82,6 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           validate-wrappers: false
-      - name: Set Gemini API Key
-        shell: bash
         run: find . -name "GeminiService.kt" -exec sed -i 's/GEMINI_API_KEY_PLACEHOLDER/${{ secrets.GEMINI_API_KEY }}/g' {} +
       - name: Build Windows MSI
         shell: cmd
@@ -116,8 +108,6 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           validate-wrappers: false
-      - name: Set Gemini API Key
-        run: find . -name "GeminiService.kt" -exec sed -i '' 's/GEMINI_API_KEY_PLACEHOLDER/${{ secrets.GEMINI_API_KEY }}/g' {} +
       - name: Clean and Build iOS Framework
         run: ./gradlew :composeApp:linkReleaseFrameworkIosArm64 --no-build-cache --rerun-tasks
       - name: Archive iOS Framework

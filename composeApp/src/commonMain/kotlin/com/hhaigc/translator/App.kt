@@ -1,6 +1,7 @@
 package com.hhaigc.translator
 
 import androidx.compose.runtime.*
+import com.hhaigc.translator.screen.ActivationScreen
 import com.hhaigc.translator.screen.SettingsScreen
 import com.hhaigc.translator.screen.TranslatorScreen
 import com.hhaigc.translator.store.SettingsStore
@@ -9,6 +10,7 @@ import com.hhaigc.translator.theme.VoiceTranslatorTheme
 import kotlinx.coroutines.launch
 
 enum class Screen {
+    Activation,
     Translator,
     Settings
 }
@@ -18,6 +20,7 @@ fun App() {
     val settingsStore = remember { SettingsStore() }
     val scope = rememberCoroutineScope()
     var themeMode by remember { mutableStateOf(ThemeMode.AUTO) }
+    var currentScreen by remember { mutableStateOf<Screen?>(null) }
 
     LaunchedEffect(Unit) {
         val saved = settingsStore.getThemeMode()
@@ -26,12 +29,24 @@ fun App() {
             "light" -> ThemeMode.LIGHT
             else -> ThemeMode.AUTO
         }
+        // Check activation status
+        currentScreen = if (settingsStore.isActivated()) {
+            Screen.Translator
+        } else {
+            Screen.Activation
+        }
     }
 
     VoiceTranslatorTheme(themeMode = themeMode) {
-        var currentScreen by remember { mutableStateOf(Screen.Translator) }
-        
         when (currentScreen) {
+            Screen.Activation -> {
+                ActivationScreen(
+                    onActivated = {
+                        currentScreen = Screen.Translator
+                    }
+                )
+            }
+
             Screen.Translator -> {
                 TranslatorScreen(
                     onNavigateToSettings = {
@@ -59,6 +74,10 @@ fun App() {
                         }
                     }
                 )
+            }
+
+            null -> {
+                // Loading state - show nothing while checking activation
             }
         }
     }

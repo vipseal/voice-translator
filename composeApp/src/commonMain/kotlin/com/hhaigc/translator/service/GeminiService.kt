@@ -61,8 +61,12 @@ data class ResponsePart(
     val text: String
 )
 
-class GeminiService {
-    private val apiKey = "GEMINI_API_KEY_PLACEHOLDER"
+class GeminiService(
+    private var apiKey: String = ""
+) {
+    fun updateApiKey(key: String) {
+        apiKey = key
+    }
     private val client = HttpClient {
         install(ContentNegotiation) {
             json(Json {

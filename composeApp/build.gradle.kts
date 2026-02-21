@@ -90,10 +90,13 @@ android {
     
     signingConfigs {
         create("release") {
-            storeFile = file("../keystore.jks")
-            storePassword = "kgduitee"
-            keyAlias = "release"
-            keyPassword = "kgduitee"
+            val keystoreFile = file("../keystore.jks")
+            if (keystoreFile.exists()) {
+                storeFile = keystoreFile
+                storePassword = "kgduitee"
+                keyAlias = "release"
+                keyPassword = "kgduitee"
+            }
         }
     }
     

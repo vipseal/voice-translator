@@ -62,6 +62,22 @@ actual class SettingsStore {
         prefs?.edit()?.putString("theme_mode", mode)?.apply()
     }
 
+    actual suspend fun isActivated(): Boolean {
+        return prefs?.getBoolean("is_activated", false) ?: false
+    }
+
+    actual suspend fun setActivated(activated: Boolean) {
+        prefs?.edit()?.putBoolean("is_activated", activated)?.apply()
+    }
+
+    actual suspend fun getApiKey(): String {
+        return prefs?.getString("api_key", "") ?: ""
+    }
+
+    actual suspend fun setApiKey(key: String) {
+        prefs?.edit()?.putString("api_key", key)?.apply()
+    }
+
     private fun saveEnabledLanguages(languages: List<Language>) {
         val jsonString = Json.encodeToString(languages)
         prefs?.edit()?.putString("enabled_languages", jsonString)?.apply()

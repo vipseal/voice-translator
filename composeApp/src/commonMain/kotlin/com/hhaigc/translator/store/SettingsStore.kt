@@ -10,4 +10,8 @@ expect class SettingsStore() {
     suspend fun setSourceLanguage(languageCode: String)
     suspend fun getThemeMode(): String
     suspend fun setThemeMode(mode: String)
+    suspend fun isActivated(): Boolean
+    suspend fun setActivated(activated: Boolean)
+    suspend fun getApiKey(): String
+    suspend fun setApiKey(key: String)
 }

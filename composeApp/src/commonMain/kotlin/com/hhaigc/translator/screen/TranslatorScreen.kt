@@ -38,9 +38,17 @@ fun TranslatorScreen(
     val scope = rememberCoroutineScope()
     val clipboardManager = LocalClipboardManager.current
     val audioRecorder = remember { AudioRecorder() }
-    val geminiService = remember { GeminiService() }
     val settingsStore = remember { SettingsStore() }
+    val geminiService = remember { GeminiService() }
     val ttsService = remember { TtsService() }
+    
+    // Load API key from settings
+    LaunchedEffect(Unit) {
+        val apiKey = settingsStore.getApiKey()
+        if (apiKey.isNotEmpty()) {
+            geminiService.updateApiKey(apiKey)
+        }
+    }
     
     var isRecording by remember { mutableStateOf(false) }
     var sourceText by remember { mutableStateOf("") }
@@ -105,13 +113,13 @@ fun TranslatorScreen(
                         setStatus("✅ 翻译完成")
                     },
                     onFailure = { e ->
-                        error = "Translation failed: ${e.message}"
+                        error = "Translation failed. Please check your connection and try again."
                         setStatus("❌ 翻译失败")
                     }
                 )
             } catch (e: Exception) {
-                error = "Error: ${e.message}"
-                setStatus("❌ ${e.message}")
+                error = "Something went wrong. Please try again."
+                setStatus("❌ 出错了")
             } finally {
                 isProcessing = false
             }
@@ -322,13 +330,13 @@ fun TranslatorScreen(
                                                     setStatus("✅ 翻译完成")
                                                 },
                                                 onFailure = { exception ->
-                                                    error = "Translation failed: ${exception.message}"
+                                                    error = "Translation failed. Please check your connection."
                                                     setStatus("❌ 翻译失败")
                                                 }
                                             )
                                         },
                                         onFailure = { exception ->
-                                            error = "Transcription failed: ${exception.message}"
+                                            error = "Voice recognition failed. Please try again."
                                             setStatus("❌ 识别失败")
                                         }
                                     )
@@ -337,8 +345,8 @@ fun TranslatorScreen(
                                     setStatus("❌ 录音失败")
                                 }
                             } catch (e: Exception) {
-                                error = "Recording error: ${e.message}"
-                                setStatus("❌ ${e.message}")
+                                error = "Recording error. Please try again."
+                                setStatus("❌ 录音出错")
                             } finally {
                                 isProcessing = false
                             }

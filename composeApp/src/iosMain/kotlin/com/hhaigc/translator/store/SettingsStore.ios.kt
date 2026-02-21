@@ -55,6 +55,24 @@ actual class SettingsStore {
         defaults.synchronize()
     }
 
+    actual suspend fun isActivated(): Boolean {
+        return defaults.boolForKey("is_activated")
+    }
+
+    actual suspend fun setActivated(activated: Boolean) {
+        defaults.setBool(activated, "is_activated")
+        defaults.synchronize()
+    }
+
+    actual suspend fun getApiKey(): String {
+        return defaults.stringForKey("api_key") ?: ""
+    }
+
+    actual suspend fun setApiKey(key: String) {
+        defaults.setObject(key, "api_key")
+        defaults.synchronize()
+    }
+
     private fun saveEnabledLanguages(languages: List<Language>) {
         val jsonString = Json.encodeToString(languages)
         defaults.setObject(jsonString, "enabled_languages")
