@@ -82,7 +82,6 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           validate-wrappers: false
-        run: find . -name "GeminiService.kt" -exec sed -i 's/GEMINI_API_KEY_PLACEHOLDER/${{ secrets.GEMINI_API_KEY }}/g' {} +
       - name: Build Windows MSI
         shell: cmd
         run: call gradlew.bat :composeApp:packageMsi --no-build-cache --rerun-tasks
