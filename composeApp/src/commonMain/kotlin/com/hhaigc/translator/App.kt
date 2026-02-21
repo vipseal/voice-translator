@@ -46,37 +46,39 @@ fun App() {
                 )
             }
 
-            Screen.Translator -> {
-                PlatformBackHandler(enabled = false) {}
-                TranslatorScreen(
-                    onNavigateToSettings = {
-                        currentScreen = Screen.Settings
-                    }
-                )
-            }
-            
-            Screen.Settings -> {
-                PlatformBackHandler(enabled = true) {
-                    currentScreen = Screen.Translator
-                }
-                SettingsScreen(
-                    onBackClick = {
-                        currentScreen = Screen.Translator
-                    },
-                    currentThemeMode = themeMode,
-                    onThemeModeChanged = { newMode ->
-                        themeMode = newMode
-                        scope.launch {
-                            settingsStore.setThemeMode(
-                                when (newMode) {
-                                    ThemeMode.AUTO -> "auto"
-                                    ThemeMode.DARK -> "dark"
-                                    ThemeMode.LIGHT -> "light"
-                                }
-                            )
+            Screen.Translator, Screen.Settings -> {
+                androidx.compose.foundation.layout.Box {
+                    // Always keep TranslatorScreen composed to preserve state
+                    TranslatorScreen(
+                        onNavigateToSettings = {
+                            currentScreen = Screen.Settings
                         }
+                    )
+                    // Overlay Settings on top when active
+                    if (currentScreen == Screen.Settings) {
+                        PlatformBackHandler(enabled = true) {
+                            currentScreen = Screen.Translator
+                        }
+                        SettingsScreen(
+                            onBackClick = {
+                                currentScreen = Screen.Translator
+                            },
+                            currentThemeMode = themeMode,
+                            onThemeModeChanged = { newMode ->
+                                themeMode = newMode
+                                scope.launch {
+                                    settingsStore.setThemeMode(
+                                        when (newMode) {
+                                            ThemeMode.AUTO -> "auto"
+                                            ThemeMode.DARK -> "dark"
+                                            ThemeMode.LIGHT -> "light"
+                                        }
+                                    )
+                                }
+                            }
+                        )
                     }
-                )
+                }
             }
 
             null -> {}
