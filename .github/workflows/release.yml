@@ -16,6 +16,8 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       - uses: gradle/actions/setup-gradle@v4
+        with:
+          validate-wrappers: false
       - name: Set Gemini API Key
         run: find . -name "GeminiService.kt" -exec sed -i 's/GEMINI_API_KEY_PLACEHOLDER/${{ secrets.GEMINI_API_KEY }}/g' {} +
       - name: Build Android Debug APK
@@ -38,6 +40,8 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       - uses: gradle/actions/setup-gradle@v4
+        with:
+          validate-wrappers: false
       - name: Set Gemini API Key
         run: find . -name "GeminiService.kt" -exec sed -i 's/GEMINI_API_KEY_PLACEHOLDER/${{ secrets.GEMINI_API_KEY }}/g' {} +
       - name: Build Linux DEB
@@ -57,6 +61,8 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       - uses: gradle/actions/setup-gradle@v4
+        with:
+          validate-wrappers: false
       - name: Set Gemini API Key
         run: find . -name "GeminiService.kt" -exec sed -i '' 's/GEMINI_API_KEY_PLACEHOLDER/${{ secrets.GEMINI_API_KEY }}/g' {} +
       - name: Build macOS DMG
@@ -76,6 +82,8 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       - uses: gradle/actions/setup-gradle@v4
+        with:
+          validate-wrappers: false
       - name: Set Gemini API Key
         shell: bash
         run: find . -name "GeminiService.kt" -exec sed -i 's/GEMINI_API_KEY_PLACEHOLDER/${{ secrets.GEMINI_API_KEY }}/g' {} +
@@ -102,6 +110,8 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       - uses: gradle/actions/setup-gradle@v4
+        with:
+          validate-wrappers: false
       - name: Set Gemini API Key
         run: find . -name "GeminiService.kt" -exec sed -i '' 's/GEMINI_API_KEY_PLACEHOLDER/${{ secrets.GEMINI_API_KEY }}/g' {} +
       - name: Clean and Build iOS Framework
