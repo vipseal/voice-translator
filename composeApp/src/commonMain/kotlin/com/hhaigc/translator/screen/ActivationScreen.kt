@@ -16,6 +16,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hhaigc.translator.crypto.CryptoUtils
+import com.hhaigc.translator.i18n.AppStrings
 import com.hhaigc.translator.store.SettingsStore
 import kotlinx.coroutines.launch
 
@@ -25,13 +26,14 @@ fun ActivationScreen(
 ) {
     val scope = rememberCoroutineScope()
     val settingsStore = remember { SettingsStore() }
+    val s = AppStrings.current
     var code by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
 
     fun activate() {
         if (code.isBlank()) {
-            error = "Please enter an activation code"
+            error = s.activationCodeEmpty
             return
         }
         isLoading = true
@@ -46,7 +48,7 @@ fun ActivationScreen(
                 onActivated()
             }
         } else {
-            error = "Invalid activation code"
+            error = s.activationCodeInvalid
             isLoading = false
         }
     }
@@ -92,7 +94,7 @@ fun ActivationScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Enter your activation code to get started",
+                    text = s.activationSubtitle,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     textAlign = TextAlign.Center
@@ -106,7 +108,7 @@ fun ActivationScreen(
                         code = it
                         error = null
                     },
-                    label = { Text("Activation Code") },
+                    label = { Text(s.activationCodeLabel) },
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
                     isError = error != null,
@@ -142,7 +144,7 @@ fun ActivationScreen(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Text("Activate", fontWeight = FontWeight.SemiBold)
+                        Text(s.activateButton, fontWeight = FontWeight.SemiBold)
                     }
                 }
 

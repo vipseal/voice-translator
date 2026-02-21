@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hhaigc.translator.i18n.AppStrings
 import com.hhaigc.translator.model.Language
 import com.hhaigc.translator.model.TranscriptionResult
 import com.hhaigc.translator.service.AudioRecorder
@@ -43,6 +44,7 @@ fun TranslatorScreen(
     val settingsStore = remember { SettingsStore() }
     val geminiService = remember { GeminiService() }
     val ttsService = remember { TtsService() }
+    val s = AppStrings.current
     
     // Load API key from settings
     LaunchedEffect(Unit) {
@@ -59,7 +61,7 @@ fun TranslatorScreen(
     var enabledLanguages by remember { mutableStateOf(emptyList<Language>()) }
     var isProcessing by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
-    var statusText by remember { mutableStateOf("Gemini AI 翻译") }
+    var statusText by remember { mutableStateOf(s.statusDefault) }
     var sourceExpanded by remember { mutableStateOf(false) }
     
     // Collect enabled languages
@@ -74,29 +76,29 @@ fun TranslatorScreen(
     fun copyToClipboard(text: String, label: String = "") {
         clipboardManager.setText(AnnotatedString(text))
         if (label.isNotEmpty()) {
-            statusText = "✅ 已复制 $label"
+            statusText = "${s.copiedLabel} $label"
         }
     }
     
     fun copyAllTranslations() {
         val detected = if (detectedLanguage.isNotEmpty()) " ($detectedLanguage)" else ""
-        var result = "📝 原文$detected:\n$sourceText\n\n"
-        result += "🌍 翻译结果:\n${"─".repeat(20)}\n"
+        var result = "${s.copySourceLabel}$detected:\n$sourceText\n\n"
+        result += "${s.copyTranslationLabel}\n${"─".repeat(20)}\n"
         enabledLanguages.forEach { lang ->
             val text = translations[lang.code]
             if (!text.isNullOrEmpty()) {
                 result += "\n${lang.flag} ${lang.name}:\n$text\n"
             }
         }
-        result += "\n${"─".repeat(20)}\n⚡ VoiceTranslator by Gemini AI"
+        result += "\n${"─".repeat(20)}\n${s.copyFooter}"
         copyToClipboard(result)
-        setStatus("✅ 已复制全部翻译")
+        setStatus(s.copiedAllTranslations)
     }
     
     fun translateClipboardText() {
         val clipText = clipboardManager.getText()?.text
         if (clipText.isNullOrBlank()) {
-            setStatus("❌ 剪贴板为空")
+            setStatus(s.clipboardEmpty)
             return
         }
         scope.launch {
@@ -104,7 +106,7 @@ fun TranslatorScreen(
             error = null
             sourceText = clipText.trim()
             detectedLanguage = ""
-            setStatus("🌍 正在翻译...")
+            setStatus(s.translating)
             
             try {
                 val targetLanguages = enabledLanguages.map { it.code }
@@ -113,16 +115,16 @@ fun TranslatorScreen(
                     onSuccess = { (transcription, translationsMap) ->
                         detectedLanguage = transcription.lang
                         translations = translationsMap
-                        setStatus("✅ 翻译完成")
+                        setStatus(s.translateDone)
                     },
                     onFailure = { e ->
-                        error = "Translation failed. Please check your connection and try again."
-                        setStatus("❌ 翻译失败")
+                        error = s.errorTranslationFailed
+                        setStatus(s.translateFailed)
                     }
                 )
             } catch (e: Exception) {
-                error = "Something went wrong. Please try again."
-                setStatus("❌ 出错了")
+                error = s.errorSomethingWrong
+                setStatus(s.somethingWrong)
             } finally {
                 isProcessing = false
             }
@@ -145,7 +147,7 @@ fun TranslatorScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "🌐 语音翻译",
+                text = s.appTitle,
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold
@@ -153,7 +155,7 @@ fun TranslatorScreen(
             IconButton(onClick = onNavigateToSettings) {
                 Icon(
                     Icons.Default.Settings,
-                    contentDescription = "Settings",
+                    contentDescription = s.settings,
                     tint = MaterialTheme.colorScheme.onBackground
                 )
             }
@@ -183,14 +185,14 @@ fun TranslatorScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "原文 / Source",
+                        text = s.sourceLabel,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                         letterSpacing = 1.sp
                     )
                     if (sourceText.isNotEmpty()) {
                         Text(
-                            text = if (sourceExpanded) "▲ 收起" else "▼ 展开",
+                            text = if (sourceExpanded) "▲ ${s.collapse}" else "▼ ${s.expand}",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontSize = 11.sp
@@ -224,7 +226,7 @@ fun TranslatorScreen(
                     }
                 } else {
                     Text(
-                        text = "点击下方麦克风开始录音...",
+                        text = s.recordHint,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                         fontStyle = FontStyle.Italic
@@ -244,7 +246,7 @@ fun TranslatorScreen(
                     shape = RoundedCornerShape(20.dp),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
                 ) {
-                    Text("📄 复制全部翻译", fontSize = 12.sp)
+                    Text(s.copyAllButton, fontSize = 12.sp)
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -331,7 +333,7 @@ fun TranslatorScreen(
                             isRecording = false
                             isProcessing = true
                             error = null
-                            setStatus("🔄 正在识别语音...")
+                            setStatus(s.recognizingSpeech)
                             
                             try {
                                 val audioData = audioRecorder.stopRecording()
@@ -342,33 +344,33 @@ fun TranslatorScreen(
                                             sourceText = transcription.text
                                             detectedLanguage = transcription.lang
                                             
-                                            setStatus("🌍 正在翻译...")
+                                            setStatus(s.translating)
                                             val targetLanguages = enabledLanguages.map { it.code }
                                             val translationResult = geminiService.translateText(transcription.text, targetLanguages)
                                             
                                             translationResult.fold(
                                                 onSuccess = { translationsMap ->
                                                     translations = translationsMap
-                                                    setStatus("✅ 翻译完成")
+                                                    setStatus(s.translateDone)
                                                 },
                                                 onFailure = { exception ->
-                                                    error = "Translation failed. Please check your connection."
-                                                    setStatus("❌ 翻译失败")
+                                                    error = s.errorTranslationFailed
+                                                    setStatus(s.translateFailed)
                                                 }
                                             )
                                         },
                                         onFailure = { exception ->
-                                            error = "Voice recognition failed. Please try again."
-                                            setStatus("❌ 识别失败")
+                                            error = s.errorVoiceRecognition
+                                            setStatus(s.recognitionFailed)
                                         }
                                     )
                                 } else {
-                                    error = "Failed to record audio"
-                                    setStatus("❌ 录音失败")
+                                    error = s.errorFailedRecord
+                                    setStatus(s.recordingFailed)
                                 }
                             } catch (e: Exception) {
-                                error = "Recording error. Please try again."
-                                setStatus("❌ 录音出错")
+                                error = s.errorRecording
+                                setStatus(s.recordingError)
                             } finally {
                                 isProcessing = false
                             }
@@ -380,15 +382,15 @@ fun TranslatorScreen(
                                     if (audioRecorder.startRecording()) {
                                         isRecording = true
                                         error = null
-                                        setStatus("🔄 录音中...")
+                                        setStatus(s.recording)
                                     } else {
-                                        error = "Failed to start recording"
-                                        setStatus("❌ 无法开始录音")
+                                        error = s.errorFailedStart
+                                        setStatus(s.cannotStartRecording)
                                     }
                                 }
                             } else {
-                                error = "Microphone permission required"
-                                setStatus("❌ 需要麦克风权限")
+                                error = s.errorMicPermission
+                                setStatus(s.micPermissionRequired)
                             }
                         }
                     }
@@ -420,7 +422,7 @@ fun TranslatorScreen(
         }
         
         Text(
-            text = if (isRecording) "录音中...点击停止" else "🎤 录音　📋 粘贴翻译",
+            text = if (isRecording) s.recordingTapStop else s.recordAndPaste,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
             modifier = Modifier.padding(top = 8.dp)
@@ -445,6 +447,7 @@ private fun TranslationCard(
     onTTS: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val s = AppStrings.current
     
     Card(
         modifier = Modifier
@@ -502,7 +505,7 @@ private fun TranslationCard(
             
             if (translation.length > 120) {
                 Text(
-                    text = if (expanded) "收起 ▲" else "展开 ▼",
+                    text = if (expanded) "${s.collapse} ▲" else "${s.expand} ▼",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier

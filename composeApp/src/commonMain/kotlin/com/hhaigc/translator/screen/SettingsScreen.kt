@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hhaigc.translator.i18n.AppStrings
 import com.hhaigc.translator.model.Language
 import com.hhaigc.translator.store.SettingsStore
 import com.hhaigc.translator.theme.ThemeMode
@@ -28,6 +29,7 @@ fun SettingsScreen(
 ) {
     val scope = rememberCoroutineScope()
     val settingsStore = remember { SettingsStore() }
+    val s = AppStrings.current
     var enabledLanguages by remember { mutableStateOf(emptyList<Language>()) }
     
     LaunchedEffect(Unit) {
@@ -61,7 +63,7 @@ fun SettingsScreen(
                     )
                 }
                 Text(
-                    text = "Settings",
+                    text = s.settings,
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold,
@@ -82,7 +84,7 @@ fun SettingsScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "Appearance",
+                            text = s.appearance,
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold,
@@ -90,9 +92,9 @@ fun SettingsScreen(
                         )
                         
                         val options = listOf(
-                            ThemeMode.AUTO to "🔄 Auto (System)",
-                            ThemeMode.LIGHT to "☀️ Light",
-                            ThemeMode.DARK to "🌙 Dark"
+                            ThemeMode.AUTO to s.themeAuto,
+                            ThemeMode.LIGHT to s.themeLight,
+                            ThemeMode.DARK to s.themeDark
                         )
                         
                         Row(
@@ -121,14 +123,14 @@ fun SettingsScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "Translation Languages",
+                            text = s.translationLanguages,
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         Text(
-                            text = "Select which languages you want to translate to:",
+                            text = s.selectLanguagesHint,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
                             modifier = Modifier.padding(bottom = 12.dp)
@@ -156,20 +158,20 @@ fun SettingsScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "About",
+                            text = s.about,
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         Text(
-                            text = "AI Translator uses Google Gemini 2.0 Flash for real-time voice transcription and translation.",
+                            text = s.aboutDescription,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         Text(
-                            text = "Version 0.0.3",
+                            text = s.version,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                         )
