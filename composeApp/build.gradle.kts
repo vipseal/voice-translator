@@ -138,9 +138,14 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "VoiceTranslator"
             packageVersion = "1.0.0"
+            description = "AI-powered voice and text translator"
+            vendor = "wu.seal"
             
             macOS {
                 bundleID = "wu.seal.app.aitranslator"
+                appStore = false
+                dockName = "VoiceTranslator"
+                iconFile.set(project.file("src/desktopMain/resources/icon.png"))
                 infoPlist {
                     extraKeysRawXml = """
                         <key>NSMicrophoneUsageDescription</key>
@@ -148,6 +153,14 @@ compose.desktop {
                     """.trimIndent()
                 }
                 entitlementsFile.set(project.file("src/desktopMain/resources/entitlements.plist"))
+            }
+            
+            windows {
+                iconFile.set(project.file("src/desktopMain/resources/icon.png"))
+            }
+            
+            linux {
+                iconFile.set(project.file("src/desktopMain/resources/icon.png"))
             }
         }
     }
