@@ -18,9 +18,20 @@ actual class AudioRecorder {
     
     companion object {
         private var appContext: Context? = null
+        private var permissionRequester: (() -> Unit)? = null
+        private var permissionCallback: ((Boolean) -> Unit)? = null
         
         fun initWithContext(context: Context) {
             appContext = context.applicationContext
+        }
+        
+        fun setPermissionRequester(requester: () -> Unit) {
+            permissionRequester = requester
+        }
+        
+        fun onPermissionResult(granted: Boolean) {
+            permissionCallback?.invoke(granted)
+            permissionCallback = null
         }
     }
     
@@ -38,6 +49,15 @@ actual class AudioRecorder {
         } catch (e: Exception) {
             false
         }
+    }
+    
+    fun requestPermission(callback: (Boolean) -> Unit) {
+        if (hasPermission()) {
+            callback(true)
+            return
+        }
+        permissionCallback = callback
+        permissionRequester?.invoke() ?: callback(false)
     }
     
     actual suspend fun startRecording(): Boolean = withContext(Dispatchers.IO) {

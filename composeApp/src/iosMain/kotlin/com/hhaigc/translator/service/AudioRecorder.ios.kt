@@ -100,5 +100,9 @@ actual class AudioRecorder {
         }
     }
     
+    actual fun requestPermission(callback: (Boolean) -> Unit) {
+        callback(hasPermission())
+    }
+
     actual fun isRecording(): Boolean = isCurrentlyRecording
 }

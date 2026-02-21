@@ -337,20 +337,22 @@ fun TranslatorScreen(
                             }
                         }
                     } else {
-                        if (audioRecorder.hasPermission()) {
-                            scope.launch {
-                                if (audioRecorder.startRecording()) {
-                                    isRecording = true
-                                    error = null
-                                    setStatus("🔄 正在识别语音...")
-                                } else {
-                                    error = "Failed to start recording"
-                                    setStatus("❌ 无法开始录音")
+                        audioRecorder.requestPermission { granted ->
+                            if (granted) {
+                                scope.launch {
+                                    if (audioRecorder.startRecording()) {
+                                        isRecording = true
+                                        error = null
+                                        setStatus("🔄 录音中...")
+                                    } else {
+                                        error = "Failed to start recording"
+                                        setStatus("❌ 无法开始录音")
+                                    }
                                 }
+                            } else {
+                                error = "Microphone permission required"
+                                setStatus("❌ 需要麦克风权限")
                             }
-                        } else {
-                            error = "Microphone permission required"
-                            setStatus("❌ 需要麦克风权限")
                         }
                     }
                 },
