@@ -1,5 +1,6 @@
 package com.hhaigc.translator.service
 
+import platform.AVFAudio.AVSpeechBoundaryImmediate
 import platform.AVFAudio.AVSpeechSynthesizer
 import platform.AVFAudio.AVSpeechUtterance
 import platform.AVFAudio.AVSpeechSynthesisVoice
@@ -13,14 +14,14 @@ actual class TtsService {
         utterance.voice = AVSpeechSynthesisVoice.voiceWithLanguage(bcp47)
         utterance.rate = 0.5f
         if (synthesizer.isSpeaking()) {
-            synthesizer.stopSpeakingAtBoundary(0.toLong())
+            synthesizer.stopSpeakingAtBoundary(AVSpeechBoundaryImmediate)
         }
         synthesizer.speakUtterance(utterance)
     }
 
     actual fun stop() {
         if (synthesizer.isSpeaking()) {
-            synthesizer.stopSpeakingAtBoundary(0.toLong())
+            synthesizer.stopSpeakingAtBoundary(AVSpeechBoundaryImmediate)
         }
     }
 
