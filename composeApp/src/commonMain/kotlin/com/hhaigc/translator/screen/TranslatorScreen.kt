@@ -29,8 +29,11 @@ import com.hhaigc.translator.model.Language
 import com.hhaigc.translator.model.TranscriptionResult
 import com.hhaigc.translator.service.AudioRecorder
 import com.hhaigc.translator.service.GeminiService
+import com.hhaigc.translator.service.SoundService
 import com.hhaigc.translator.service.TtsService
 import com.hhaigc.translator.store.SettingsStore
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,6 +47,8 @@ fun TranslatorScreen(
     val settingsStore = remember { SettingsStore() }
     val geminiService = remember { GeminiService() }
     val ttsService = remember { TtsService() }
+    val soundService = remember { SoundService() }
+    val haptic = LocalHapticFeedback.current
     val s = AppStrings.current
     
     // Load API key from settings
@@ -349,6 +354,8 @@ fun TranslatorScreen(
             FloatingActionButton(
                 onClick = {
                     if (isRecording) {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        soundService.playStopRecording()
                         scope.launch {
                             isRecording = false
                             isProcessing = true
@@ -403,6 +410,8 @@ fun TranslatorScreen(
                                         isRecording = true
                                         error = null
                                         setStatus(s.recording)
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        soundService.playStartRecording()
                                     } else {
                                         error = s.errorFailedStart
                                         setStatus(s.cannotStartRecording)

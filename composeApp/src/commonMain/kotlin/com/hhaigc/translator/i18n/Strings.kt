@@ -101,8 +101,8 @@ val StringsEn = AppStringSet(
     translationLanguages = "Translation Languages",
     selectLanguagesHint = "Select which languages you want to translate to:",
     about = "About",
-    aboutDescription = "AI Translator uses Google Gemini 2.0 Flash for real-time voice transcription and translation.",
-    version = "Version 0.0.3",
+    aboutDescription = "VoiceTranslator — AI-powered voice and text translator. Record speech or paste text to translate into multiple languages simultaneously.",
+    version = "Version 0.0.4",
 )
 
 val StringsZh = AppStringSet(
@@ -152,8 +152,8 @@ val StringsZh = AppStringSet(
     translationLanguages = "翻译语言",
     selectLanguagesHint = "选择要翻译的目标语言：",
     about = "关于",
-    aboutDescription = "AI Translator 使用 Google Gemini 2.0 Flash 进行实时语音转写和翻译。",
-    version = "版本 0.0.3",
+    aboutDescription = "VoiceTranslator — AI 驱动的语音和文本翻译器。录制语音或粘贴文本，同时翻译为多种语言。",
+    version = "版本 0.0.4",
 )
 
 val StringsTh = AppStringSet(
@@ -203,8 +203,8 @@ val StringsTh = AppStringSet(
     translationLanguages = "ภาษาที่แปล",
     selectLanguagesHint = "เลือกภาษาที่ต้องการแปล:",
     about = "เกี่ยวกับ",
-    aboutDescription = "AI Translator ใช้ Google Gemini 2.0 Flash สำหรับการถอดเสียงและแปลภาษาแบบเรียลไทม์",
-    version = "เวอร์ชัน 0.0.3",
+    aboutDescription = "VoiceTranslator — เครื่องแปลภาษาเสียงและข้อความที่ขับเคลื่อนด้วย AI บันทึกเสียงหรือวางข้อความเพื่อแปลเป็นหลายภาษาพร้อมกัน",
+    version = "เวอร์ชัน 0.0.4",
 )
 
 val StringsJa = AppStringSet(
@@ -254,8 +254,8 @@ val StringsJa = AppStringSet(
     translationLanguages = "翻訳言語",
     selectLanguagesHint = "翻訳する言語を選択してください：",
     about = "概要",
-    aboutDescription = "AI Translator は Google Gemini 2.0 Flash を使用してリアルタイムの音声文字起こしと翻訳を行います。",
-    version = "バージョン 0.0.3",
+    aboutDescription = "VoiceTranslator — AI搭載の音声・テキスト翻訳ツール。音声を録音またはテキストを貼り付けて、複数の言語に同時翻訳します。",
+    version = "バージョン 0.0.4",
 )
 
 val StringsKo = AppStringSet(
@@ -305,8 +305,8 @@ val StringsKo = AppStringSet(
     translationLanguages = "번역 언어",
     selectLanguagesHint = "번역할 언어를 선택하세요:",
     about = "정보",
-    aboutDescription = "AI Translator는 Google Gemini 2.0 Flash를 사용하여 실시간 음성 전사 및 번역을 수행합니다.",
-    version = "버전 0.0.3",
+    aboutDescription = "VoiceTranslator — AI 기반 음성 및 텍스트 번역기. 음성을 녹음하거나 텍스트를 붙여넣어 여러 언어로 동시에 번역합니다.",
+    version = "버전 0.0.4",
 )
 
 val StringsAr = AppStringSet(
@@ -356,8 +356,8 @@ val StringsAr = AppStringSet(
     translationLanguages = "لغات الترجمة",
     selectLanguagesHint = "اختر اللغات التي تريد الترجمة إليها:",
     about = "حول",
-    aboutDescription = "يستخدم AI Translator تقنية Google Gemini 2.0 Flash للنسخ الصوتي والترجمة في الوقت الفعلي.",
-    version = "الإصدار 0.0.3",
+    aboutDescription = "VoiceTranslator — مترجم صوتي ونصي مدعوم بالذكاء الاصطناعي. سجّل الكلام أو الصق النص للترجمة إلى لغات متعددة في وقت واحد.",
+    version = "الإصدار 0.0.4",
 )
 
 val StringsFr = AppStringSet(
@@ -407,8 +407,8 @@ val StringsFr = AppStringSet(
     translationLanguages = "Langues de traduction",
     selectLanguagesHint = "Sélectionnez les langues vers lesquelles traduire :",
     about = "À propos",
-    aboutDescription = "AI Translator utilise Google Gemini 2.0 Flash pour la transcription vocale et la traduction en temps réel.",
-    version = "Version 0.0.3",
+    aboutDescription = "VoiceTranslator — Traducteur vocal et textuel propulsé par l'IA. Enregistrez la parole ou collez du texte pour traduire en plusieurs langues simultanément.",
+    version = "Version 0.0.4",
 )
 
 val StringsEs = AppStringSet(
@@ -458,6 +458,6 @@ val StringsEs = AppStringSet(
     translationLanguages = "Idiomas de traducción",
     selectLanguagesHint = "Selecciona los idiomas a los que deseas traducir:",
     about = "Acerca de",
-    aboutDescription = "AI Translator usa Google Gemini 2.0 Flash para transcripción de voz y traducción en tiempo real.",
-    version = "Versión 0.0.3",
+    aboutDescription = "VoiceTranslator — Traductor de voz y texto impulsado por IA. Graba voz o pega texto para traducir a múltiples idiomas simultáneamente.",
+    version = "Versión 0.0.4",
 )
