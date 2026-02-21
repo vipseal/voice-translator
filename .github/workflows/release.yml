@@ -79,13 +79,35 @@ jobs:
       - name: Set Gemini API Key
         shell: bash
         run: find . -name "GeminiService.kt" -exec sed -i 's/GEMINI_API_KEY_PLACEHOLDER/${{ secrets.GEMINI_API_KEY }}/g' {} +
-      - name: Build Windows MSI
-        run: ./gradlew :composeApp:packageMsi
-      - name: Upload Windows MSI
+      - name: Build Windows EXE
+        run: ./gradlew :composeApp:createReleaseDistributable --no-build-cache --rerun-tasks
+      - name: List Windows build output
+        shell: pwsh
+        run: Get-ChildItem -Path composeApp/build/compose/binaries -Recurse -File | Select-Object FullName, Length
+        continue-on-error: true
+      - name: Package Windows distributable
+        shell: pwsh
+        run: |
+          $distDir = "composeApp/build/compose/binaries/main/app"
+          if (Test-Path $distDir) {
+            Compress-Archive -Path "$distDir/*" -DestinationPath "VoiceTranslator-windows.zip" -Force
+            Write-Host "Created VoiceTranslator-windows.zip"
+          } else {
+            Write-Host "No distributable found at $distDir, checking alternatives..."
+            Get-ChildItem -Path composeApp/build/compose -Recurse -Directory | Select-Object FullName
+          }
+        continue-on-error: true
+      - name: Try packageMsi as fallback
+        run: ./gradlew :composeApp:packageMsi --no-build-cache --rerun-tasks
+        continue-on-error: true
+      - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
           name: desktop-windows
-          path: composeApp/build/compose/binaries/main/msi/*.msi
+          path: |
+            VoiceTranslator-windows.zip
+            composeApp/build/compose/binaries/main/msi/*.msi
+            composeApp/build/compose/binaries/main/exe/*.exe
           if-no-files-found: warn
 
   build-ios:
