@@ -51,7 +51,7 @@ data class AppStringSet(
     val selectLanguagesHint: String,
     val about: String,
     val aboutDescription: String,
-    val version: String,
+    val versionLabel: String,
 )
 
 val StringsEn = AppStringSet(
@@ -102,7 +102,7 @@ val StringsEn = AppStringSet(
     selectLanguagesHint = "Select which languages you want to translate to:",
     about = "About",
     aboutDescription = "VoiceTranslator — AI-powered voice and text translator. Record speech or paste text to translate into multiple languages simultaneously.",
-    version = "Version 0.0.4",
+    versionLabel = "Version",
 )
 
 val StringsZh = AppStringSet(
@@ -153,7 +153,7 @@ val StringsZh = AppStringSet(
     selectLanguagesHint = "选择要翻译的目标语言：",
     about = "关于",
     aboutDescription = "VoiceTranslator — AI 驱动的语音和文本翻译器。录制语音或粘贴文本，同时翻译为多种语言。",
-    version = "版本 0.0.4",
+    versionLabel = "版本",
 )
 
 val StringsTh = AppStringSet(
@@ -204,7 +204,7 @@ val StringsTh = AppStringSet(
     selectLanguagesHint = "เลือกภาษาที่ต้องการแปล:",
     about = "เกี่ยวกับ",
     aboutDescription = "VoiceTranslator — เครื่องแปลภาษาเสียงและข้อความที่ขับเคลื่อนด้วย AI บันทึกเสียงหรือวางข้อความเพื่อแปลเป็นหลายภาษาพร้อมกัน",
-    version = "เวอร์ชัน 0.0.4",
+    versionLabel = "เวอร์ชัน",
 )
 
 val StringsJa = AppStringSet(
@@ -255,7 +255,7 @@ val StringsJa = AppStringSet(
     selectLanguagesHint = "翻訳する言語を選択してください：",
     about = "概要",
     aboutDescription = "VoiceTranslator — AI搭載の音声・テキスト翻訳ツール。音声を録音またはテキストを貼り付けて、複数の言語に同時翻訳します。",
-    version = "バージョン 0.0.4",
+    versionLabel = "バージョン",
 )
 
 val StringsKo = AppStringSet(
@@ -306,7 +306,7 @@ val StringsKo = AppStringSet(
     selectLanguagesHint = "번역할 언어를 선택하세요:",
     about = "정보",
     aboutDescription = "VoiceTranslator — AI 기반 음성 및 텍스트 번역기. 음성을 녹음하거나 텍스트를 붙여넣어 여러 언어로 동시에 번역합니다.",
-    version = "버전 0.0.4",
+    versionLabel = "버전",
 )
 
 val StringsAr = AppStringSet(
@@ -357,7 +357,7 @@ val StringsAr = AppStringSet(
     selectLanguagesHint = "اختر اللغات التي تريد الترجمة إليها:",
     about = "حول",
     aboutDescription = "VoiceTranslator — مترجم صوتي ونصي مدعوم بالذكاء الاصطناعي. سجّل الكلام أو الصق النص للترجمة إلى لغات متعددة في وقت واحد.",
-    version = "الإصدار 0.0.4",
+    versionLabel = "الإصدار",
 )
 
 val StringsFr = AppStringSet(
@@ -408,7 +408,7 @@ val StringsFr = AppStringSet(
     selectLanguagesHint = "Sélectionnez les langues vers lesquelles traduire :",
     about = "À propos",
     aboutDescription = "VoiceTranslator — Traducteur vocal et textuel propulsé par l'IA. Enregistrez la parole ou collez du texte pour traduire en plusieurs langues simultanément.",
-    version = "Version 0.0.4",
+    versionLabel = "Version",
 )
 
 val StringsEs = AppStringSet(
@@ -459,5 +459,5 @@ val StringsEs = AppStringSet(
     selectLanguagesHint = "Selecciona los idiomas a los que deseas traducir:",
     about = "Acerca de",
     aboutDescription = "VoiceTranslator — Traductor de voz y texto impulsado por IA. Graba voz o pega texto para traducir a múltiples idiomas simultáneamente.",
-    version = "Versión 0.0.4",
+    versionLabel = "Versión",
 )

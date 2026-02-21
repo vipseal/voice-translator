@@ -171,7 +171,7 @@ fun SettingsScreen(
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         Text(
-                            text = s.version,
+                            text = "${s.versionLabel} ${com.hhaigc.translator.BuildVersion.NAME}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                         )

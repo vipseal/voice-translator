@@ -142,4 +142,33 @@ compose.desktop {
     }
 }
 
-// Web configuration removed - no longer needed
+// Generate version from git tag
+val appVersion: String by lazy {
+    val tag = providers.exec {
+        commandLine("git", "describe", "--tags", "--abbrev=0")
+    }.standardOutput.asText.get().trim()
+    if (tag.startsWith("v")) tag.substring(1) else tag.ifEmpty { "0.0.0" }
+}
+
+tasks.register("generateVersionFile") {
+    val outputDir = layout.buildDirectory.dir("generated/version")
+    outputs.dir(outputDir)
+    doLast {
+        val dir = outputDir.get().asFile.resolve("com/hhaigc/translator")
+        dir.mkdirs()
+        dir.resolve("BuildVersion.kt").writeText("""
+            package com.hhaigc.translator
+            object BuildVersion {
+                const val NAME = "$appVersion"
+            }
+        """.trimIndent())
+    }
+}
+
+kotlin.sourceSets.commonMain {
+    kotlin.srcDir(layout.buildDirectory.dir("generated/version"))
+}
+
+tasks.matching { it.name.startsWith("compile") && it.name.contains("Kotlin") }.configureEach {
+    dependsOn("generateVersionFile")
+}
