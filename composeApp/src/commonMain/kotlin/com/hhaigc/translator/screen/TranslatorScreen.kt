@@ -97,16 +97,12 @@ fun TranslatorScreen(
         setStatus(s.copiedAllTranslations)
     }
     
-    fun translateClipboardText() {
-        val clipText = clipboardManager.getText()?.text
-        if (clipText.isNullOrBlank()) {
-            setStatus(s.clipboardEmpty)
-            return
-        }
+    fun translateSourceText(text: String = sourceText) {
+        if (text.isBlank()) return
         scope.launch {
             isProcessing = true
             error = null
-            sourceText = clipText.trim()
+            sourceText = text.trim()
             detectedLanguage = ""
             setStatus(s.translating)
             
@@ -131,6 +127,15 @@ fun TranslatorScreen(
                 isProcessing = false
             }
         }
+    }
+
+    fun translateClipboardText() {
+        val clipText = clipboardManager.getText()?.text
+        if (clipText.isNullOrBlank()) {
+            setStatus(s.clipboardEmpty)
+            return
+        }
+        translateSourceText(clipText)
     }
     
     Column(
@@ -174,12 +179,11 @@ fun TranslatorScreen(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // Source text card
+        // Source text card - editable input
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 12.dp)
-                .then(if (sourceText.isNotEmpty()) Modifier.clickable { sourceExpanded = !sourceExpanded } else Modifier),
+                .padding(bottom = 12.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant
             ),
@@ -201,35 +205,7 @@ fun TranslatorScreen(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                         letterSpacing = 1.sp
                     )
-                    if (sourceText.isNotEmpty()) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = if (sourceExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                contentDescription = if (sourceExpanded) s.collapse else s.expand,
-                                modifier = Modifier.size(16.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = if (sourceExpanded) s.collapse else s.expand,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontSize = 11.sp
-                            )
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                if (sourceText.isNotEmpty()) {
-                    Text(
-                        text = sourceText,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        lineHeight = 24.sp,
-                        maxLines = if (sourceExpanded) Int.MAX_VALUE else 3,
-                        overflow = TextOverflow.Ellipsis
-                    )
                     if (detectedLanguage.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(8.dp))
                         Surface(
                             shape = RoundedCornerShape(10.dp),
                             color = MaterialTheme.colorScheme.primary
@@ -243,13 +219,55 @@ fun TranslatorScreen(
                             )
                         }
                     }
-                } else {
-                    Text(
-                        text = s.recordHint,
-                        style = MaterialTheme.typography.bodyLarge,
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = sourceText,
+                    onValueChange = { sourceText = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = {
+                        Text(
+                            text = s.recordHint,
+                            style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                         fontStyle = FontStyle.Italic
                     )
+                    },
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(
+                        color = MaterialTheme.colorScheme.onSurface,
+                        lineHeight = 24.sp
+                    ),
+                    maxLines = if (sourceExpanded) Int.MAX_VALUE else 5,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                if (sourceText.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(onClick = { sourceText = ""; translations = emptyMap(); detectedLanguage = "" }) {
+                            Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(s.clear, fontSize = 12.sp)
+                        }
+                        FilledTonalButton(
+                            onClick = { translateSourceText() },
+                            enabled = !isProcessing,
+                            shape = RoundedCornerShape(20.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
+                        ) {
+                            Icon(Icons.Default.Translate, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(s.translate, fontSize = 12.sp)
+                        }
+                    }
                 }
             }
         }

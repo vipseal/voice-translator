@@ -52,6 +52,8 @@ data class AppStringSet(
     val about: String,
     val aboutDescription: String,
     val versionLabel: String,
+    val clear: String,
+    val translate: String,
 )
 
 val StringsEn = AppStringSet(
@@ -103,6 +105,8 @@ val StringsEn = AppStringSet(
     about = "About",
     aboutDescription = "VoiceTranslator — AI-powered voice and text translator. Record speech or paste text to translate into multiple languages simultaneously.",
     versionLabel = "Version",
+    clear = "Clear",
+    translate = "Translate",
 )
 
 val StringsZh = AppStringSet(
@@ -152,6 +156,8 @@ val StringsZh = AppStringSet(
     translationLanguages = "翻译语言",
     selectLanguagesHint = "选择要翻译的目标语言：",
     about = "关于",
+    clear = "清除",
+    translate = "翻译",
     aboutDescription = "VoiceTranslator — AI 驱动的语音和文本翻译器。录制语音或粘贴文本，同时翻译为多种语言。",
     versionLabel = "版本",
 )
@@ -201,6 +207,8 @@ val StringsTh = AppStringSet(
     themeLight = "สว่าง",
     themeDark = "มืด",
     translationLanguages = "ภาษาที่แปล",
+    clear = "ล้าง",
+    translate = "แปล",
     selectLanguagesHint = "เลือกภาษาที่ต้องการแปล:",
     about = "เกี่ยวกับ",
     aboutDescription = "VoiceTranslator — เครื่องแปลภาษาเสียงและข้อความที่ขับเคลื่อนด้วย AI บันทึกเสียงหรือวางข้อความเพื่อแปลเป็นหลายภาษาพร้อมกัน",
@@ -250,6 +258,8 @@ val StringsJa = AppStringSet(
     appearance = "外観",
     themeAuto = "自動（システム）",
     themeLight = "ライト",
+    clear = "クリア",
+    translate = "翻訳",
     themeDark = "ダーク",
     translationLanguages = "翻訳言語",
     selectLanguagesHint = "翻訳する言語を選択してください：",
@@ -299,6 +309,8 @@ val StringsKo = AppStringSet(
     activateButton = "활성화",
     settings = "설정",
     appearance = "외관",
+    clear = "지우기",
+    translate = "번역",
     themeAuto = "자동 (시스템)",
     themeLight = "라이트",
     themeDark = "다크",
@@ -348,6 +360,8 @@ val StringsAr = AppStringSet(
     activationCodeEmpty = "يرجى إدخال رمز التفعيل",
     activationCodeInvalid = "رمز التفعيل غير صالح",
     activateButton = "تفعيل",
+    clear = "مسح",
+    translate = "ترجمة",
     settings = "الإعدادات",
     appearance = "المظهر",
     themeAuto = "تلقائي (النظام)",
@@ -397,6 +411,8 @@ val StringsFr = AppStringSet(
     activationSubtitle = "Entrez votre code d'activation pour commencer",
     activationCodeLabel = "Code d'activation",
     activationCodeEmpty = "Veuillez entrer un code d'activation",
+    clear = "Effacer",
+    translate = "Traduire",
     activationCodeInvalid = "Code d'activation invalide",
     activateButton = "Activer",
     settings = "Paramètres",
@@ -446,6 +462,8 @@ val StringsEs = AppStringSet(
     errorFailedStart = "No se pudo iniciar la grabación",
     errorMicPermission = "Se requiere permiso de micrófono",
     activationSubtitle = "Ingresa tu código de activación para comenzar",
+    clear = "Limpiar",
+    translate = "Traducir",
     activationCodeLabel = "Código de activación",
     activationCodeEmpty = "Por favor ingresa un código de activación",
     activationCodeInvalid = "Código de activación inválido",
