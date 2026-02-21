@@ -143,7 +143,6 @@ compose.desktop {
             
             macOS {
                 bundleID = "wu.seal.app.aitranslator"
-                appStore = false
                 dockName = "VoiceTranslator"
                 iconFile.set(project.file("src/desktopMain/resources/icon.icns"))
                 infoPlist {
@@ -152,7 +151,6 @@ compose.desktop {
                         <string>VoiceTranslator needs microphone access for voice recording and translation.</string>
                     """.trimIndent()
                 }
-                entitlementsFile.set(project.file("src/desktopMain/resources/entitlements.plist"))
             }
             
             windows {
