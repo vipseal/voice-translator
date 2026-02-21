@@ -543,13 +543,20 @@ private fun TranslationCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "${language.flag} ${language.name}",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.sp
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    com.hhaigc.translator.ui.FlagImage(
+                        langCode = language.code,
+                        size = 16.dp,
+                        modifier = Modifier.padding(end = 6.dp)
+                    )
+                    Text(
+                        text = language.name,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp
+                    )
+                }
                 Row {
                     IconButton(
                         onClick = onCopy,

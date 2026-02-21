@@ -231,9 +231,9 @@ private fun LanguageToggleItem(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.weight(1f)
         ) {
-            Text(
-                text = language.flag,
-                fontSize = 20.sp,
+            com.hhaigc.translator.ui.FlagImage(
+                langCode = language.code,
+                size = 24.dp,
                 modifier = Modifier.padding(end = 12.dp)
             )
             Column {
