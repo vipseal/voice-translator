@@ -267,54 +267,7 @@ fun TranslatorScreen(
             )
         }
 
-        // Action bar (always visible when source input is hidden)
-        if (!showSourceInput) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Record button (large, primary)
-                FilledIconButton(
-                    onClick = { withFeedback { startOrStopRecording() } },
-                    modifier = Modifier.size(48.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Icon(
-                        imageVector = if (isRecording) Icons.Default.Stop else Icons.Default.Mic,
-                        contentDescription = if (isRecording) "Stop" else "Record",
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                // Paste button
-                OutlinedIconButton(
-                    onClick = { withFeedback { translateClipboardText() } },
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ContentPaste,
-                        contentDescription = "Paste",
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                // Edit/type button - shows source input
-                OutlinedIconButton(
-                    onClick = { withFeedback { showSourceInput = true } },
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Type",
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-            }
-        }
+        // Action bar moved to bottom
 
         // Source text card - only when showSourceInput is true
         if (showSourceInput) {
@@ -504,14 +457,63 @@ fun TranslatorScreen(
             }
         }
         
+        // Bottom action bar - always visible
+        Spacer(modifier = Modifier.height(6.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Edit/type button (left)
+            OutlinedIconButton(
+                onClick = { withFeedback { showSourceInput = !showSourceInput } },
+                modifier = Modifier.size(44.dp),
+                colors = IconButtonDefaults.outlinedIconButtonColors(
+                    contentColor = if (showSourceInput) MaterialTheme.colorScheme.primary
+                                   else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Type",
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            // Record button (center, large, primary)
+            FilledIconButton(
+                onClick = { withFeedback { startOrStopRecording() } },
+                modifier = Modifier.size(56.dp),
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                    contentColor = Color.White
+                )
+            ) {
+                Icon(
+                    imageVector = if (isRecording) Icons.Default.Stop else Icons.Default.Mic,
+                    contentDescription = if (isRecording) "Stop" else "Record",
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+            // Paste button (right)
+            OutlinedIconButton(
+                onClick = { withFeedback { translateClipboardText() } },
+                modifier = Modifier.size(44.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ContentPaste,
+                    contentDescription = "Paste",
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
         // Status bar
-        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = statusText,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
             fontSize = 11.sp
         )
+        Spacer(modifier = Modifier.height(4.dp))
     }
 }
 
