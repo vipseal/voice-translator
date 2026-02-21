@@ -136,9 +136,14 @@ class GeminiService {
             val responseText = response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text
                 ?: return Result.failure(Exception("No translation received"))
             
+            // Strip markdown code fences if present
+            val cleanText = responseText.trim()
+                .removePrefix("```json").removePrefix("```")
+                .removeSuffix("```").trim()
+            
             // Parse JSON response
             val json = Json { ignoreUnknownKeys = true }
-            val translations = json.decodeFromString<Map<String, String>>(responseText.trim())
+            val translations = json.decodeFromString<Map<String, String>>(cleanText)
             
             Result.success(translations)
         } catch (e: Exception) {
