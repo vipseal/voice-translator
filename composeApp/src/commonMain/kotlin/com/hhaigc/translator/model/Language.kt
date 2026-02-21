@@ -11,21 +11,21 @@ data class Language(
 ) {
     companion object {
         val ALL_LANGUAGES = listOf(
-            Language("en", "English", "🇺🇸"),
-            Language("zh", "Chinese", "🇨🇳"),
-            Language("ja", "Japanese", "🇯🇵"),
-            Language("ko", "Korean", "🇰🇷"),
-            Language("ar", "Arabic", "🇸🇦"),
-            Language("fr", "French", "🇫🇷"),
-            Language("de", "German", "🇩🇪"),
-            Language("es", "Spanish", "🇪🇸"),
-            Language("ru", "Russian", "🇷🇺"),
-            Language("th", "Thai", "🇹🇭"),
-            Language("vi", "Vietnamese", "🇻🇳"),
-            Language("pt", "Portuguese", "🇧🇷"),
-            Language("hi", "Hindi", "🇮🇳"),
-            Language("id", "Indonesian", "🇮🇩"),
-            Language("tr", "Turkish", "🇹🇷")
+            Language("en", "English", "🇺🇸", isEnabled = true),
+            Language("zh", "中文", "🇨🇳", isEnabled = true),
+            Language("ja", "日本語", "🇯🇵", isEnabled = true),
+            Language("ko", "한국어", "🇰🇷", isEnabled = false),
+            Language("ar", "العربية", "🇸🇦", isEnabled = false),
+            Language("fr", "Français", "🇫🇷", isEnabled = false),
+            Language("de", "Deutsch", "🇩🇪", isEnabled = false),
+            Language("es", "Español", "🇪🇸", isEnabled = false),
+            Language("ru", "Русский", "🇷🇺", isEnabled = false),
+            Language("th", "ไทย", "🇹🇭", isEnabled = true),
+            Language("vi", "Tiếng Việt", "🇻🇳", isEnabled = false),
+            Language("pt", "Português", "🇧🇷", isEnabled = false),
+            Language("hi", "हिन्दी", "🇮🇳", isEnabled = false),
+            Language("id", "Bahasa Indonesia", "🇮🇩", isEnabled = false),
+            Language("tr", "Türkçe", "🇹🇷", isEnabled = false)
         )
     }
 }
@@ -34,4 +34,11 @@ data class Language(
 data class TranslationResult(
     val originalText: String,
     val translations: Map<String, String> // language code to translated text
+)
+
+@Serializable
+data class TranscriptionResult(
+    val text: String,
+    val lang: String = "Unknown",
+    val langCode: String = "und"
 )
