@@ -93,21 +93,15 @@ object CryptoUtils {
     @OptIn(ExperimentalEncodingApi::class)
     fun tryDecryptApiKey(activationCode: String): String? {
         val keyBytes = sha256(activationCode.encodeToByteArray())
-
-        try {
-                val encrypted = Base64.decode(encryptedKeyBase64)
-                val decrypted = ByteArray(encrypted.size) { i ->
-                    (encrypted[i].toInt() xor keyBytes[i % keyBytes.size].toInt()).toByte()
-                }
-                val result = decrypted.decodeToString()
-                // Validate it looks like a Gemini API key
-                if (result.startsWith("AIza") && result.length > 30) {
-                    return result
-                }
-                return null
+        return try {
+            val encrypted = Base64.decode(encryptedKeyBase64)
+            val decrypted = ByteArray(encrypted.size) { i ->
+                (encrypted[i].toInt() xor keyBytes[i % keyBytes.size].toInt()).toByte()
+            }
+            val result = decrypted.decodeToString()
+            if (result.startsWith("AIza") && result.length > 30) result else null
         } catch (_: Exception) {
-            return null
+            null
         }
-        return null
     }
 }
