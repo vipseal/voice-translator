@@ -81,17 +81,14 @@ fun TranslatorScreen(
     }
     
     fun copyAllTranslations() {
-        val detected = if (detectedLanguage.isNotEmpty()) " ($detectedLanguage)" else ""
-        var result = "${s.copySourceLabel}$detected:\n$sourceText\n\n"
-        result += "${s.copyTranslationLabel}\n${"─".repeat(20)}\n"
+        val parts = mutableListOf<String>()
         enabledLanguages.forEach { lang ->
             val text = translations[lang.code]
             if (!text.isNullOrEmpty()) {
-                result += "\n${lang.flag} ${lang.name}:\n$text\n"
+                parts.add("${lang.flag} ${lang.name}: $text")
             }
         }
-        result += "\n${"─".repeat(20)}\n${s.copyFooter}"
-        copyToClipboard(result)
+        copyToClipboard(parts.joinToString("\n"))
         setStatus(s.copiedAllTranslations)
     }
     
