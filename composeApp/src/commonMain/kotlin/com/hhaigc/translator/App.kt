@@ -1,6 +1,5 @@
 package com.hhaigc.translator
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.*
 import com.hhaigc.translator.screen.ActivationScreen
 import com.hhaigc.translator.screen.SettingsScreen
@@ -30,7 +29,6 @@ fun App() {
             "light" -> ThemeMode.LIGHT
             else -> ThemeMode.AUTO
         }
-        // Check activation status
         currentScreen = if (settingsStore.isActivated()) {
             Screen.Translator
         } else {
@@ -49,6 +47,7 @@ fun App() {
             }
 
             Screen.Translator -> {
+                PlatformBackHandler(enabled = false) {}
                 TranslatorScreen(
                     onNavigateToSettings = {
                         currentScreen = Screen.Settings
@@ -57,7 +56,9 @@ fun App() {
             }
             
             Screen.Settings -> {
-                BackHandler { currentScreen = Screen.Translator }
+                PlatformBackHandler(enabled = true) {
+                    currentScreen = Screen.Translator
+                }
                 SettingsScreen(
                     onBackClick = {
                         currentScreen = Screen.Translator
@@ -78,9 +79,10 @@ fun App() {
                 )
             }
 
-            null -> {
-                // Loading state - show nothing while checking activation
-            }
+            null -> {}
         }
     }
 }
+
+@Composable
+expect fun PlatformBackHandler(enabled: Boolean, onBack: () -> Unit)
