@@ -51,7 +51,7 @@ actual class AudioRecorder {
         }
     }
     
-    fun requestPermission(callback: (Boolean) -> Unit) {
+    actual fun requestPermission(callback: (Boolean) -> Unit) {
         if (hasPermission()) {
             callback(true)
             return
