@@ -74,6 +74,7 @@ fun TranslatorScreen(
     var error by remember { mutableStateOf<String?>(null) }
     var statusText by remember { mutableStateOf(s.statusDefault) }
     var sourceExpanded by remember { mutableStateOf(false) }
+    var showSourceInput by remember { mutableStateOf(false) }
     
     // Collect enabled languages
     LaunchedEffect(Unit) {
@@ -120,6 +121,7 @@ fun TranslatorScreen(
                         detectedLanguage = transcription.lang
                         translations = translationsMap
                         setStatus(s.translateDone)
+                        showSourceInput = false
                     },
                     onFailure = { e ->
                         error = s.errorTranslationFailed
@@ -142,6 +144,80 @@ fun TranslatorScreen(
             return
         }
         translateSourceText(clipText)
+    }
+
+    fun startOrStopRecording() {
+        if (isRecording) {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            soundService.playStopRecording()
+            scope.launch {
+                isRecording = false
+                isProcessing = true
+                error = null
+                setStatus(s.recognizingSpeech)
+
+                try {
+                    val audioData = audioRecorder.stopRecording()
+                    if (audioData != null) {
+                        val transcriptionResult = geminiService.transcribeAudio(audioData)
+                        transcriptionResult.fold(
+                            onSuccess = { transcription ->
+                                sourceText = transcription.text
+                                detectedLanguage = transcription.lang
+
+                                setStatus(s.translating)
+                                val targetLanguages = enabledLanguages.map { it.code }
+                                val translationResult = geminiService.translateText(transcription.text, targetLanguages)
+
+                                translationResult.fold(
+                                    onSuccess = { translationsMap ->
+                                        translations = translationsMap
+                                        setStatus(s.translateDone)
+                                        showSourceInput = false
+                                    },
+                                    onFailure = { exception ->
+                                        error = s.errorTranslationFailed
+                                        setStatus(s.translateFailed)
+                                    }
+                                )
+                            },
+                            onFailure = { exception ->
+                                error = s.errorVoiceRecognition
+                                setStatus(s.recognitionFailed)
+                            }
+                        )
+                    } else {
+                        error = s.errorFailedRecord
+                        setStatus(s.recordingFailed)
+                    }
+                } catch (e: Exception) {
+                    error = s.errorRecording
+                    setStatus(s.recordingError)
+                } finally {
+                    isProcessing = false
+                }
+            }
+        } else {
+            audioRecorder.requestPermission { granted ->
+                if (granted) {
+                    scope.launch {
+                        if (audioRecorder.startRecording()) {
+                            isRecording = true
+                            error = null
+                            setStatus(s.recording)
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            soundService.playStartRecording()
+                        } else {
+                            error = s.errorFailedStart
+                            setStatus(s.cannotStartRecording)
+                        }
+                    }
+                } else {
+                    error = s.errorMicPermission
+                    setStatus(s.micPermissionRequired)
+                }
+            }
+        }
     }
     
     Column(
@@ -182,96 +258,167 @@ fun TranslatorScreen(
                 )
             }
         }
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        // Source text card - editable input
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 6.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            ),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(12.dp)
-                    .animateContentSize()
+
+        // Linear progress indicator
+        if (isProcessing) {
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        // Action bar (always visible when source input is hidden)
+        if (!showSourceInput) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                // Record button (large, primary)
+                FilledIconButton(
+                    onClick = { withFeedback { startOrStopRecording() } },
+                    modifier = Modifier.size(48.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                        contentColor = Color.White
+                    )
                 ) {
-                    Text(
-                        text = s.sourceLabel,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                        letterSpacing = 1.sp
+                    Icon(
+                        imageVector = if (isRecording) Icons.Default.Stop else Icons.Default.Mic,
+                        contentDescription = if (isRecording) "Stop" else "Record",
+                        modifier = Modifier.size(24.dp)
                     )
-                    if (detectedLanguage.isNotEmpty()) {
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = MaterialTheme.colorScheme.primary
-                        ) {
-                            Text(
-                                text = "🔍 $detectedLanguage",
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.White,
-                                fontSize = 11.sp
-                            )
-                        }
-                    }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = sourceText,
-                    onValueChange = { sourceText = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = {
-                        Text(
-                            text = s.recordHint,
-                            style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                        fontStyle = FontStyle.Italic
+                Spacer(modifier = Modifier.width(16.dp))
+                // Paste button
+                OutlinedIconButton(
+                    onClick = { withFeedback { translateClipboardText() } },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ContentPaste,
+                        contentDescription = "Paste",
+                        modifier = Modifier.size(22.dp)
                     )
-                    },
-                    textStyle = MaterialTheme.typography.bodyLarge.copy(
-                        color = MaterialTheme.colorScheme.onSurface,
-                        lineHeight = 24.sp
-                    ),
-                    maxLines = if (sourceExpanded) Int.MAX_VALUE else 3,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                )
-                if (sourceText.isNotEmpty()) {
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                // Edit/type button - shows source input
+                OutlinedIconButton(
+                    onClick = { withFeedback { showSourceInput = true } },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Type",
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+            }
+        }
+
+        // Source text card - only when showSourceInput is true
+        if (showSourceInput) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 6.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(12.dp)
+                        .animateContentSize()
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TextButton(onClick = { withFeedback { sourceText = ""; translations = emptyMap(); detectedLanguage = "" } }) {
-                            Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(s.clear, fontSize = 12.sp)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = s.sourceLabel,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                letterSpacing = 1.sp
+                            )
+                            if (detectedLanguage.isNotEmpty()) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = MaterialTheme.colorScheme.primary
+                                ) {
+                                    Text(
+                                        text = "🔍 $detectedLanguage",
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color.White,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
                         }
-                        FilledTonalButton(
-                            onClick = { withFeedback { translateSourceText() } },
-                            enabled = !isProcessing,
-                            shape = RoundedCornerShape(20.dp),
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
+                        IconButton(
+                            onClick = { withFeedback { showSourceInput = false } },
+                            modifier = Modifier.size(32.dp)
                         ) {
-                            Icon(Icons.Default.Translate, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(s.translate, fontSize = 12.sp)
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Collapse",
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = sourceText,
+                        onValueChange = { sourceText = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = {
+                            Text(
+                                text = s.recordHint,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                fontStyle = FontStyle.Italic
+                            )
+                        },
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(
+                            color = MaterialTheme.colorScheme.onSurface,
+                            lineHeight = 24.sp
+                        ),
+                        maxLines = if (sourceExpanded) Int.MAX_VALUE else 3,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    if (sourceText.isNotEmpty()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TextButton(onClick = { withFeedback { sourceText = ""; translations = emptyMap(); detectedLanguage = "" } }) {
+                                Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(s.clear, fontSize = 12.sp)
+                            }
+                            FilledTonalButton(
+                                onClick = { withFeedback { translateSourceText() } },
+                                enabled = !isProcessing,
+                                shape = RoundedCornerShape(20.dp),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
+                            ) {
+                                Icon(Icons.Default.Translate, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(s.translate, fontSize = 12.sp)
+                            }
                         }
                     }
                 }
@@ -329,18 +476,11 @@ fun TranslatorScreen(
                 contentAlignment = Alignment.Center
             ) {
                 if (isProcessing) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(32.dp),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = statusText,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-                        )
-                    }
+                    Text(
+                        text = statusText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                    )
                 }
             }
         }
@@ -363,122 +503,6 @@ fun TranslatorScreen(
                 )
             }
         }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        // Record + Clipboard buttons
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Record button
-            FloatingActionButton(
-                onClick = {
-                    if (isRecording) {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        soundService.playStopRecording()
-                        scope.launch {
-                            isRecording = false
-                            isProcessing = true
-                            error = null
-                            setStatus(s.recognizingSpeech)
-                            
-                            try {
-                                val audioData = audioRecorder.stopRecording()
-                                if (audioData != null) {
-                                    val transcriptionResult = geminiService.transcribeAudio(audioData)
-                                    transcriptionResult.fold(
-                                        onSuccess = { transcription ->
-                                            sourceText = transcription.text
-                                            detectedLanguage = transcription.lang
-                                            
-                                            setStatus(s.translating)
-                                            val targetLanguages = enabledLanguages.map { it.code }
-                                            val translationResult = geminiService.translateText(transcription.text, targetLanguages)
-                                            
-                                            translationResult.fold(
-                                                onSuccess = { translationsMap ->
-                                                    translations = translationsMap
-                                                    setStatus(s.translateDone)
-                                                },
-                                                onFailure = { exception ->
-                                                    error = s.errorTranslationFailed
-                                                    setStatus(s.translateFailed)
-                                                }
-                                            )
-                                        },
-                                        onFailure = { exception ->
-                                            error = s.errorVoiceRecognition
-                                            setStatus(s.recognitionFailed)
-                                        }
-                                    )
-                                } else {
-                                    error = s.errorFailedRecord
-                                    setStatus(s.recordingFailed)
-                                }
-                            } catch (e: Exception) {
-                                error = s.errorRecording
-                                setStatus(s.recordingError)
-                            } finally {
-                                isProcessing = false
-                            }
-                        }
-                    } else {
-                        audioRecorder.requestPermission { granted ->
-                            if (granted) {
-                                scope.launch {
-                                    if (audioRecorder.startRecording()) {
-                                        isRecording = true
-                                        error = null
-                                        setStatus(s.recording)
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        soundService.playStartRecording()
-                                    } else {
-                                        error = s.errorFailedStart
-                                        setStatus(s.cannotStartRecording)
-                                    }
-                                }
-                            } else {
-                                error = s.errorMicPermission
-                                setStatus(s.micPermissionRequired)
-                            }
-                        }
-                    }
-                },
-                modifier = Modifier.size(72.dp),
-                containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                contentColor = Color.White,
-                shape = CircleShape
-            ) {
-                Icon(
-                    imageVector = if (isRecording) Icons.Default.Stop else Icons.Default.Mic,
-                    contentDescription = if (isRecording) "Stop" else "Record",
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-            
-            // Clipboard paste button
-            FloatingActionButton(
-                onClick = { withFeedback { translateClipboardText() } },
-                modifier = Modifier.size(56.dp),
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-                shape = CircleShape
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ContentPaste,
-                    contentDescription = "Paste",
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-        
-        Text(
-            text = if (isRecording) s.recordingTapStop else s.recordAndPaste,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-            modifier = Modifier.padding(top = 8.dp)
-        )
         
         // Status bar
         Spacer(modifier = Modifier.height(4.dp))
