@@ -34,9 +34,16 @@ private external fun jsStartRecording(stream: JsAny): Boolean
 () => {
     return new Promise((resolve) => {
         const mr = window.__mediaRecorder;
-        if (!mr || mr.state === 'inactive') { resolve(null); return; }
+        if (!mr || mr.state === 'inactive') {
+            if (mr && mr.stream) mr.stream.getTracks().forEach(t => t.stop());
+            resolve(null);
+            return;
+        }
         mr.onstop = () => {
+            mr.stream.getTracks().forEach(t => t.stop());
+            window.__mediaRecorder = null;
             const blob = new Blob(window.__audioChunks, { type: mr.mimeType || 'audio/webm' });
+            window.__audioChunks = [];
             const reader = new FileReader();
             reader.onloadend = () => {
                 const arr = new Uint8Array(reader.result);
@@ -45,7 +52,6 @@ private external fun jsStartRecording(stream: JsAny): Boolean
             reader.readAsArrayBuffer(blob);
         };
         mr.stop();
-        mr.stream.getTracks().forEach(t => t.stop());
     });
 }
 """)

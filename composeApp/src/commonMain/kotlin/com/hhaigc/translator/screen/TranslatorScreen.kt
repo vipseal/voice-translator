@@ -515,7 +515,7 @@ fun TranslatorScreen(
     }
     SnackbarHost(
         hostState = snackbarHostState,
-        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp)
+        modifier = Modifier.align(Alignment.TopCenter).padding(top = 60.dp)
     ) { data ->
         Snackbar(
             snackbarData = data,
