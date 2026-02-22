@@ -34,6 +34,7 @@ import com.hhaigc.translator.service.TtsService
 import com.hhaigc.translator.store.SettingsStore
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -90,7 +91,12 @@ fun TranslatorScreen(
     fun showToast(text: String) {
         scope.launch {
             snackbarHostState.currentSnackbarData?.dismiss()
-            snackbarHostState.showSnackbar(text, duration = SnackbarDuration.Short)
+            val job = launch {
+                snackbarHostState.showSnackbar(text, duration = SnackbarDuration.Indefinite)
+            }
+            delay(1000L)
+            snackbarHostState.currentSnackbarData?.dismiss()
+            job.cancel()
         }
     }
     
