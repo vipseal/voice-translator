@@ -294,7 +294,7 @@ fun TranslatorScreen(
                                     color = MaterialTheme.colorScheme.primary
                                 ) {
                                     Text(
-                                        text = "🔍 $detectedLanguage",
+                                        text = "$detectedLanguage",
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = Color.White,
