@@ -67,11 +67,11 @@ private external fun jsCheckPermission(): Promise<JsBoolean>
 private external fun jsArrayLength(arr: JsAny): Int
 
 @JsFun("(arr, i) => arr[i]")
-private external fun jsArrayGet(arr: JsAny, i: Int): JsByte
+private external fun jsArrayGet(arr: JsAny, i: Int): Int
 
 private fun JsAny.toByteArray(): ByteArray {
     val len = jsArrayLength(this)
-    return ByteArray(len) { i -> jsArrayGet(this, i) }
+    return ByteArray(len) { i -> jsArrayGet(this, i).toByte() }
 }
 
 actual class AudioRecorder {
