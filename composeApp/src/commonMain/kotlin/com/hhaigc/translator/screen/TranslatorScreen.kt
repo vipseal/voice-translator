@@ -73,6 +73,7 @@ fun TranslatorScreen(
     var isProcessing by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var statusText by remember { mutableStateOf(s.statusDefault) }
+    val snackbarHostState = remember { SnackbarHostState() }
     var sourceExpanded by remember { mutableStateOf(false) }
     var showSourceInput by remember { mutableStateOf(false) }
     
@@ -83,12 +84,20 @@ fun TranslatorScreen(
         }
     }
     
-    fun setStatus(text: String) { statusText = text }
+        fun setStatus(text: String) {
+        statusText = text
+    }
+    fun showToast(text: String) {
+        scope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(text, duration = SnackbarDuration.Short)
+        }
+    }
     
     fun copyToClipboard(text: String, label: String = "") {
         clipboardService.writeText(text)
         if (label.isNotEmpty()) {
-            statusText = "${s.copiedLabel} $label"
+            showToast("${s.copiedLabel} $label")
         }
     }
     
@@ -101,7 +110,7 @@ fun TranslatorScreen(
             }
         }
         copyToClipboard(parts.joinToString("\n"))
-        setStatus(s.copiedAllTranslations)
+        showToast(s.copiedAllTranslations)
     }
     
     fun translateSourceText(text: String = sourceText) {
@@ -120,17 +129,17 @@ fun TranslatorScreen(
                     onSuccess = { (transcription, translationsMap) ->
                         detectedLanguage = transcription.lang
                         translations = translationsMap
-                        setStatus(s.translateDone)
+                        showToast(s.translateDone)
                         showSourceInput = false
                     },
                     onFailure = { e ->
                         error = s.errorTranslationFailed
-                        setStatus(s.translateFailed)
+                        showToast(s.translateFailed)
                     }
                 )
             } catch (e: Exception) {
                 error = s.errorSomethingWrong
-                setStatus(s.somethingWrong)
+                showToast(s.somethingWrong)
             } finally {
                 isProcessing = false
             }
@@ -140,7 +149,7 @@ fun TranslatorScreen(
     fun translateClipboardText() {
         clipboardService.readText { clipText ->
             if (clipText.isNullOrBlank()) {
-                setStatus(s.clipboardEmpty)
+                showToast(s.clipboardEmpty)
             } else {
                 translateSourceText(clipText)
             }
@@ -168,21 +177,21 @@ fun TranslatorScreen(
                                 sourceText = transcription.text
                                 detectedLanguage = transcription.lang
                                 translations = translationsMap
-                                setStatus(s.translateDone)
+                                showToast(s.translateDone)
                                 showSourceInput = false
                             },
                             onFailure = { exception ->
                                 error = s.errorTranslationFailed
-                                setStatus(s.translateFailed)
+                                showToast(s.translateFailed)
                             }
                         )
                     } else {
                         error = s.errorFailedRecord
-                        setStatus(s.recordingFailed)
+                        showToast(s.recordingFailed)
                     }
                 } catch (e: Exception) {
                     error = s.errorRecording
-                    setStatus(s.recordingError)
+                    showToast(s.recordingError)
                 } finally {
                     isProcessing = false
                 }
@@ -199,21 +208,21 @@ fun TranslatorScreen(
                             soundService.playStartRecording()
                         } else {
                             error = s.errorFailedStart
-                            setStatus(s.cannotStartRecording)
+                            showToast(s.cannotStartRecording)
                         }
                     }
                 } else {
                     error = s.errorMicPermission
-                    setStatus(s.micPermissionRequired)
+                    showToast(s.micPermissionRequired)
                 }
             }
         }
     }
     
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
             .statusBarsPadding()
             .navigationBarsPadding()
             .padding(horizontal = 12.dp, vertical = 8.dp),
@@ -502,15 +511,20 @@ fun TranslatorScreen(
                 )
             }
         }
-        // Status bar
-        Text(
-            text = statusText,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
-            fontSize = 11.sp
-        )
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(8.dp))
     }
+    SnackbarHost(
+        hostState = snackbarHostState,
+        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp)
+    ) { data ->
+        Snackbar(
+            snackbarData = data,
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            shape = RoundedCornerShape(12.dp),
+        )
+    }
+    } // end Box
 }
 
 @Composable
