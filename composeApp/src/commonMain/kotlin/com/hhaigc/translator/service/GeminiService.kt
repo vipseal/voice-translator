@@ -140,6 +140,7 @@ class GeminiService(
                 
                 Return the result as a JSON object where each key is the language code and each value is the translation.
                 Example: {"en": "Hello", "fr": "Bonjour", "es": "Hola"}
+                IMPORTANT: For Chinese (zh), always use Simplified Chinese characters, never Traditional.
                 If the source text is already in a target language, keep it as-is for that language.
                 Only return the JSON object, no additional text.
             """.trimIndent()
@@ -247,6 +248,7 @@ class GeminiService(
                                     Listen to this audio. Detect the language, transcribe it, and translate to these languages: $langList
                                     
                                     Respond ONLY in JSON: {"text": "transcribed text", "detectedLang": "language name", "detectedCode": "ISO code", "translations": {"en": "...", "zh": "...", ...}}
+                                    IMPORTANT: For Chinese (zh), always use Simplified Chinese characters, never Traditional.
                                     If source matches a target language, keep the transcription as-is for that language. Only output JSON.
                                 """.trimIndent()
                             )

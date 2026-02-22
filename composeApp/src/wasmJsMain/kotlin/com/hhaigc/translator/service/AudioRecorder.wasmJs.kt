@@ -63,7 +63,7 @@ private external fun jsIsRecording(): Boolean
 @JsFun("""
 () => {
     return navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(() => true)
+        .then((s) => { s.getTracks().forEach(t => t.stop()); return true; })
         .catch(() => false);
 }
 """)
@@ -100,6 +100,7 @@ actual class AudioRecorder {
     }
 
     actual suspend fun stopRecording(): ByteArray? {
+        stream = null
         return suspendCancellableCoroutine { cont ->
             jsStopRecording().then<JsAny?> { result ->
                 if (result != null) {

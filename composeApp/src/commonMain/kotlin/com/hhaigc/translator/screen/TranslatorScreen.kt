@@ -197,6 +197,8 @@ fun TranslatorScreen(
                 }
             }
         } else {
+            soundService.playStartRecording()
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             audioRecorder.requestPermission { granted ->
                 if (granted) {
                     scope.launch {
@@ -204,8 +206,6 @@ fun TranslatorScreen(
                             isRecording = true
                             error = null
                             setStatus(s.recording)
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            soundService.playStartRecording()
                         } else {
                             error = s.errorFailedStart
                             showToast(s.cannotStartRecording)
