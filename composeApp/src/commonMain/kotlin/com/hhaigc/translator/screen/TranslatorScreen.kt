@@ -407,7 +407,7 @@ fun TranslatorScreen(
                             withFeedback {
                                 copyToClipboard(
                                     translations[language.code] ?: "",
-                                    "${language.flag} ${language.name}"
+                                    language.name
                                 )
                             }
                         },
