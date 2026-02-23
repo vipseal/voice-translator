@@ -18,6 +18,8 @@ fun main() = application {
     var bringToFront by remember { mutableStateOf(false) }
     var trayClickX by remember { mutableStateOf(0) }
     val isMac = System.getProperty("os.name").lowercase().contains("mac")
+    // Track when window was hidden by focus loss to prevent show→hide→show race
+    var lastHideTime by remember { mutableStateOf(0L) }
 
     val state = rememberWindowState(
         size = DpSize(420.dp, 700.dp),
@@ -54,10 +56,16 @@ fun main() = application {
                 trayIcon.addMouseListener(object : MouseAdapter() {
                     override fun mouseClicked(e: MouseEvent) {
                         if (e.button == MouseEvent.BUTTON1) {
-                            // Left click: show window below tray icon
                             trayClickX = e.xOnScreen
-                            isVisible = true
-                            bringToFront = true
+                            val now = System.currentTimeMillis()
+                            // If window was just hidden by focus loss (<300ms ago), treat as intentional hide
+                            if (isVisible || (now - lastHideTime < 300)) {
+                                isVisible = false
+                                lastHideTime = now
+                            } else {
+                                isVisible = true
+                                bringToFront = true
+                            }
                         }
                     }
                 })
@@ -145,6 +153,7 @@ fun main() = application {
                     override fun windowGainedFocus(e: WindowEvent?) {}
                     override fun windowLostFocus(e: WindowEvent?) {
                         isVisible = false
+                        lastHideTime = System.currentTimeMillis()
                     }
                 })
             }
