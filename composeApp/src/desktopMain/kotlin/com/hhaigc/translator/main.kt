@@ -9,6 +9,8 @@ import androidx.compose.ui.Alignment
 import java.awt.*
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.awt.event.WindowEvent
+import java.awt.event.WindowFocusListener
 import javax.imageio.ImageIO
 
 fun main() = application {
@@ -134,6 +136,17 @@ fun main() = application {
                     }
                 }
                 bringToFront = false
+            }
+        }
+        // Auto-hide when clicking outside (like JetBrains Toolbox)
+        if (isMac) {
+            LaunchedEffect(Unit) {
+                window.addWindowFocusListener(object : WindowFocusListener {
+                    override fun windowGainedFocus(e: WindowEvent?) {}
+                    override fun windowLostFocus(e: WindowEvent?) {
+                        isVisible = false
+                    }
+                })
             }
         }
         App()
