@@ -20,22 +20,29 @@ actual class AudioRecorder {
             }
             
             val audioFormat = AudioFormat(
-                44100.0f, // Sample rate
+                16000.0f, // Sample rate (16kHz is enough for speech, better compatibility)
                 16,       // Sample size in bits
                 1,        // Channels (mono)
                 true,     // Signed
-                false     // Big endian
+                false     // Big endian (little endian for WAV)
             )
             
             val dataLineInfo = DataLine.Info(TargetDataLine::class.java, audioFormat)
             
             if (!AudioSystem.isLineSupported(dataLineInfo)) {
+                // Try fallback with default mixer
+                println("AudioRecorder: Default format not supported, trying mixers...")
+                val mixers = AudioSystem.getMixerInfo()
+                for (mixerInfo in mixers) {
+                    println("AudioRecorder: Mixer: ${mixerInfo.name} - ${mixerInfo.description}")
+                }
                 return@withContext false
             }
             
             targetDataLine = AudioSystem.getLine(dataLineInfo) as TargetDataLine
             targetDataLine?.open(audioFormat)
             targetDataLine?.start()
+            println("AudioRecorder: Recording started with ${audioFormat.sampleRate}Hz")
             
             audioData = ByteArrayOutputStream()
             isCurrentlyRecording = true
@@ -82,7 +89,7 @@ actual class AudioRecorder {
             
             // Wrap raw PCM in WAV format for Gemini compatibility
             val wavOutput = ByteArrayOutputStream()
-            val audioFormat = AudioFormat(44100.0f, 16, 1, true, false)
+            val audioFormat = AudioFormat(16000.0f, 16, 1, true, false)
             val audioInputStream = AudioInputStream(
                 pcmData.inputStream(),
                 audioFormat,
@@ -99,7 +106,23 @@ actual class AudioRecorder {
     }
     
     actual fun requestPermission(callback: (Boolean) -> Unit) {
-        callback(true)
+        // Actually test if we can open the mic
+        try {
+            val format = AudioFormat(16000.0f, 16, 1, true, false)
+            val info = DataLine.Info(TargetDataLine::class.java, format)
+            if (AudioSystem.isLineSupported(info)) {
+                val line = AudioSystem.getLine(info) as TargetDataLine
+                line.open(format)
+                line.close()
+                callback(true)
+            } else {
+                println("AudioRecorder: No supported audio line found")
+                callback(false)
+            }
+        } catch (e: Exception) {
+            println("AudioRecorder: Permission check failed: ${e.message}")
+            callback(false)
+        }
     }
 
     actual fun isRecording(): Boolean = isCurrentlyRecording
