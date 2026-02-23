@@ -157,13 +157,17 @@ compose.desktop {
             vendor = "wu.seal"
             
             macOS {
-                bundleID = "wu.seal.app.aitranslator"
+                bundleID = "wu.seal.apps.aitranslator"
                 dockName = "VoiceTranslator"
                 iconFile.set(project.file("src/desktopMain/resources/icon.icns"))
+                signing {
+                    sign.set(true)
+                    identity.set("Developer ID Application: xiangling Wu (NLJ6WHCP2H)")
+                }
                 infoPlist {
                     extraKeysRawXml = """
                         <key>NSMicrophoneUsageDescription</key>
-                        <string>VoiceTranslator needs microphone access for voice recording and translation.</string>
+                        <string>This app needs access to the microphone to record audio for transcription.</string>
                     """.trimIndent()
                 }
             }
