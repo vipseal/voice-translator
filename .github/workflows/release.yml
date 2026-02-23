@@ -31,7 +31,7 @@ jobs:
             echo "linux=true" >> $GITHUB_OUTPUT
             echo "macos=true" >> $GITHUB_OUTPUT
             echo "windows=true" >> $GITHUB_OUTPUT
-            echo "ios=true" >> $GITHUB_OUTPUT
+            echo "ios=false" >> $GITHUB_OUTPUT
             echo "web=true" >> $GITHUB_OUTPUT
           else
             echo "android=$([[ "$TARGETS" == *android* ]] && echo true || echo false)" >> $GITHUB_OUTPUT
