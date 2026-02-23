@@ -15,6 +15,7 @@ import javax.imageio.ImageIO
 
 fun main() = application {
     var isVisible by remember { mutableStateOf(true) }
+    var bringToFront by remember { mutableStateOf(false) }
     val isMac = System.getProperty("os.name").lowercase().contains("mac")
 
     val state = rememberWindowState(
@@ -66,8 +67,9 @@ fun main() = application {
                 trayIcon.addMouseListener(object : MouseAdapter() {
                     override fun mouseClicked(e: MouseEvent) {
                         if (e.button == MouseEvent.BUTTON1) {
-                            // Left click: toggle window visibility
-                            isVisible = !isVisible
+                            // Left click: show and bring to front
+                            isVisible = true
+                            bringToFront = true
                         } else if (isMac && (e.button == MouseEvent.BUTTON3 || e.isPopupTrigger)) {
                             // Right click on Mac: show context menu
                             trayIcon.popupMenu = popup
@@ -99,7 +101,19 @@ fun main() = application {
         state = state,
         resizable = true
     ) {
-        // No auto-hide — window stays visible until explicitly closed or toggled via tray
+        // Bring window to front when tray icon clicked
+        LaunchedEffect(bringToFront) {
+            if (bringToFront) {
+                window.toFront()
+                window.requestFocus()
+                // On macOS, also use setAlwaysOnTop trick to force focus
+                if (isMac) {
+                    window.isAlwaysOnTop = true
+                    window.isAlwaysOnTop = false
+                }
+                bringToFront = false
+            }
+        }
         App()
     }
 }
