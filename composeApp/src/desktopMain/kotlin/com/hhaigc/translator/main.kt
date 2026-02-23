@@ -55,12 +55,27 @@ fun main() = application {
                 popup.addSeparator()
                 popup.add(exitItem)
                 
-                val trayIcon = TrayIcon(scaledImage, "VoiceTranslator", popup)
+                // On macOS, left-click should show window directly (not menu)
+                // Only set popup for non-Mac, or show it on right-click manually
+                val trayIcon = if (isMac) {
+                    TrayIcon(scaledImage, "VoiceTranslator")
+                } else {
+                    TrayIcon(scaledImage, "VoiceTranslator", popup)
+                }
                 trayIcon.isImageAutoSize = false
                 trayIcon.addMouseListener(object : MouseAdapter() {
                     override fun mouseClicked(e: MouseEvent) {
                         if (e.button == MouseEvent.BUTTON1) {
+                            // Left click: toggle window visibility
                             isVisible = !isVisible
+                        } else if (isMac && (e.button == MouseEvent.BUTTON3 || e.isPopupTrigger)) {
+                            // Right click on Mac: show context menu
+                            trayIcon.popupMenu = popup
+                        }
+                    }
+                    override fun mousePressed(e: MouseEvent) {
+                        if (isMac && e.isPopupTrigger) {
+                            trayIcon.popupMenu = popup
                         }
                     }
                 })
@@ -84,17 +99,7 @@ fun main() = application {
         state = state,
         resizable = true
     ) {
-        // Auto-hide on focus loss (click outside) on Mac
-        if (isMac) {
-            LaunchedEffect(Unit) {
-                window.addWindowFocusListener(object : WindowFocusListener {
-                    override fun windowGainedFocus(e: WindowEvent?) {}
-                    override fun windowLostFocus(e: WindowEvent?) {
-                        isVisible = false
-                    }
-                })
-            }
-        }
+        // No auto-hide — window stays visible until explicitly closed or toggled via tray
         App()
     }
 }
