@@ -122,8 +122,16 @@ fun main() = application {
                 window.toFront()
                 window.requestFocus()
                 if (isMac) {
-                    window.isAlwaysOnTop = true
-                    window.isAlwaysOnTop = false
+                    // macOS blocks toFront() from background — use AppleScript
+                    try {
+                        ProcessBuilder("osascript", "-e",
+                            """tell application "System Events" to set frontmost of first process whose unix id is ${ProcessHandle.current().pid()} to true"""
+                        ).start()
+                    } catch (_: Exception) {
+                        // Fallback
+                        window.isAlwaysOnTop = true
+                        window.isAlwaysOnTop = false
+                    }
                 }
                 bringToFront = false
             }
