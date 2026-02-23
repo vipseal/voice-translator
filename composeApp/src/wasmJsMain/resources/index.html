@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <script>if(!window.location.pathname.endsWith('/'))window.location.replace(window.location.pathname+'/');</script>
     <title>VoiceTranslator</title>
     <style>
         html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #0F0F1A; }
@@ -48,6 +49,46 @@
             }
         }
         requestAnimationFrame(checkCanvas);
+
+        // Timeout - if canvas doesn't appear in 30s, show help
+        setTimeout(function() {
+            if (!document.querySelector('canvas')) {
+                textEl.innerHTML = '⏳ Still loading (~13MB)... Please wait.<br><small style="color:#666">If stuck, try Chrome 119+ / Firefox 120+ / Edge 119+</small>';
+                textEl.style.color = '#ffaa00';
+            }
+        }, 15000);
+        setTimeout(function() {
+            if (!document.querySelector('canvas')) {
+                textEl.innerHTML = '❌ Failed to load. Try refreshing (Cmd+Shift+R).<br>Requires Chrome 119+, Firefox 120+, or Edge 119+.<br><small style="color:#666">WASM GC support required</small>';
+                textEl.style.color = '#ff5555';
+            }
+        }, 45000);
+
+        // Catch WASM/JS errors and display them
+        window.addEventListener('error', function(e) {
+            clearInterval(interval);
+            var msg = e.message || 'Unknown error';
+            if (msg.indexOf('CompileError') >= 0 || msg.indexOf('wasm') >= 0) {
+                textEl.innerHTML = '❌ Your browser does not support WASM GC.<br>Please use Chrome 119+, Firefox 120+, or Edge 119+.';
+            } else {
+                textEl.innerHTML = '❌ Error: ' + msg;
+            }
+            textEl.style.color = '#ff5555';
+            progressEl.style.background = '#ff5555';
+            console.error('Load error:', e);
+        });
+        window.addEventListener('unhandledrejection', function(e) {
+            clearInterval(interval);
+            var msg = e.reason ? (e.reason.message || String(e.reason)) : 'Unknown error';
+            if (msg.indexOf('CompileError') >= 0 || msg.indexOf('wasm') >= 0) {
+                textEl.innerHTML = '❌ Your browser does not support WASM GC.<br>Please use Chrome 119+, Firefox 120+, or Edge 119+.';
+            } else {
+                textEl.innerHTML = '❌ Error: ' + msg;
+            }
+            textEl.style.color = '#ff5555';
+            progressEl.style.background = '#ff5555';
+            console.error('Unhandled rejection:', e.reason);
+        });
     </script>
     <script src="voicetranslator.js"></script>
 </body>
