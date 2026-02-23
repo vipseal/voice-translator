@@ -1,6 +1,7 @@
 package com.hhaigc.translator.screen
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import com.hhaigc.translator.service.ClipboardService
@@ -77,6 +79,26 @@ fun TranslatorScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var sourceExpanded by remember { mutableStateOf(false) }
     var showSourceInput by remember { mutableStateOf(false) }
+    var recordingSeconds by remember { mutableStateOf(0) }
+    
+    // Auto-dismiss error after 5 seconds
+    LaunchedEffect(error) {
+        if (error != null) {
+            delay(5000L)
+            error = null
+        }
+    }
+    
+    // Recording timer
+    LaunchedEffect(isRecording) {
+        if (isRecording) {
+            recordingSeconds = 0
+            while (isRecording) {
+                delay(1000L)
+                recordingSeconds++
+            }
+        }
+    }
     
     // Collect enabled languages
     LaunchedEffect(Unit) {
@@ -433,17 +455,50 @@ fun TranslatorScreen(
                 modifier = Modifier.weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                if (isProcessing) {
+                if (isRecording) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        val minutes = recordingSeconds / 60
+                        val secs = recordingSeconds % 60
+                        Text(
+                            text = "$minutes:${secs.toString().padStart(2, '0')}",
+                            style = MaterialTheme.typography.displaySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = s.recording,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                        )
+                    }
+                } else if (isProcessing) {
                     Text(
                         text = statusText,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                     )
+                } else {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            imageVector = Icons.Default.Mic,
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.15f)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = s.recordHint,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
         
-        // Error message
+        // Error message with retry
         error?.let { errorMessage ->
             Card(
                 modifier = Modifier
@@ -451,14 +506,29 @@ fun TranslatorScreen(
                     .padding(vertical = 8.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.errorContainer
-                )
+                ),
+                shape = RoundedCornerShape(12.dp)
             ) {
-                Text(
-                    text = errorMessage,
-                    modifier = Modifier.padding(16.dp),
-                    color = MaterialTheme.colorScheme.onErrorContainer,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = errorMessage,
+                        modifier = Modifier.weight(1f),
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    if (sourceText.isNotEmpty()) {
+                        TextButton(
+                            onClick = { withFeedback { error = null; translateSourceText() } }
+                        ) {
+                            Icon(Icons.Default.Refresh, null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(s.translate, fontSize = 12.sp)
+                        }
+                    }
+                }
             }
         }
         
@@ -473,6 +543,7 @@ fun TranslatorScreen(
             FilledTonalIconButton(
                 onClick = { withFeedback { showSourceInput = !showSourceInput } },
                 modifier = Modifier.size(44.dp),
+                enabled = !isProcessing,
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
                     containerColor = if (showSourceInput) MaterialTheme.colorScheme.primaryContainer
                                      else MaterialTheme.colorScheme.surfaceVariant,
@@ -486,25 +557,55 @@ fun TranslatorScreen(
                     modifier = Modifier.size(20.dp)
                 )
             }
-            // Record button (center, large, primary)
-            FilledIconButton(
-                onClick = { withFeedback { startOrStopRecording() } },
-                modifier = Modifier.size(56.dp),
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                    contentColor = Color.White
-                )
-            ) {
-                Icon(
-                    imageVector = if (isRecording) Icons.Default.Stop else Icons.Default.Mic,
-                    contentDescription = if (isRecording) "Stop" else "Record",
-                    modifier = Modifier.size(28.dp)
-                )
+            // Record button (center, large, primary) with pulse animation
+            Box(contentAlignment = Alignment.Center) {
+                if (isRecording) {
+                    val infiniteTransition = rememberInfiniteTransition()
+                    val pulseScale by infiniteTransition.animateFloat(
+                        initialValue = 1f,
+                        targetValue = 1.5f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(800, easing = FastOutSlowInEasing),
+                            repeatMode = RepeatMode.Reverse
+                        )
+                    )
+                    val pulseAlpha by infiniteTransition.animateFloat(
+                        initialValue = 0.4f,
+                        targetValue = 0f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(800, easing = FastOutSlowInEasing),
+                            repeatMode = RepeatMode.Reverse
+                        )
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .graphicsLayer(scaleX = pulseScale, scaleY = pulseScale, alpha = pulseAlpha)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.error)
+                    )
+                }
+                FilledIconButton(
+                    onClick = { withFeedback { startOrStopRecording() } },
+                    modifier = Modifier.size(56.dp),
+                    enabled = !isProcessing,
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Icon(
+                        imageVector = if (isRecording) Icons.Default.Stop else Icons.Default.Mic,
+                        contentDescription = if (isRecording) "Stop" else "Record",
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
             // Paste button (right)
             FilledTonalIconButton(
                 onClick = { withFeedback { translateClipboardText() } },
                 modifier = Modifier.size(44.dp),
+                enabled = !isProcessing && !isRecording,
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant

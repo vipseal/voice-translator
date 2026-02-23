@@ -1,5 +1,6 @@
 package com.hhaigc.translator
 
+import androidx.compose.animation.*
 import androidx.compose.runtime.*
 import com.hhaigc.translator.screen.ActivationScreen
 import com.hhaigc.translator.screen.SettingsScreen
@@ -55,7 +56,11 @@ fun App() {
                         }
                     )
                     // Overlay Settings on top when active
-                    if (currentScreen == Screen.Settings) {
+                    AnimatedVisibility(
+                        visible = currentScreen == Screen.Settings,
+                        enter = slideInHorizontally(initialOffsetX = { it }),
+                        exit = slideOutHorizontally(targetOffsetX = { it })
+                    ) {
                         PlatformBackHandler(enabled = true) {
                             currentScreen = Screen.Translator
                         }
