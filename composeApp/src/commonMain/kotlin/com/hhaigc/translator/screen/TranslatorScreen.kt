@@ -142,38 +142,6 @@ fun TranslatorScreen(
         showToast(s.copiedAllTranslations)
     }
     
-    fun retryLastAction() {
-        val audio = lastAudioData
-        if (audio != null) {
-            // Retry voice translation with saved audio
-            scope.launch {
-                isProcessing = true
-                error = null
-                setStatus(s.translating)
-                try {
-                    val targetLanguages = enabledLanguages.map { it.code }
-                    val result = geminiService.transcribeAndTranslate(audio, targetLanguages)
-                    result.fold(
-                        onSuccess = { (transcription, translationsMap) ->
-                            sourceText = transcription.text
-                            detectedLanguage = transcription.lang
-                            translations = translationsMap
-                            showToast(s.translateDone)
-                            showSourceInput = false
-                        },
-                        onFailure = { error = s.errorTranslationFailed }
-                    )
-                } catch (e: Exception) {
-                    error = s.errorSomethingWrong
-                } finally {
-                    isProcessing = false
-                }
-            }
-        } else if (sourceText.isNotEmpty()) {
-            translateSourceText()
-        }
-    }
-
     fun translateSourceText(text: String = sourceText) {
         if (text.isBlank()) return
         scope.launch {
@@ -205,6 +173,37 @@ fun TranslatorScreen(
             } finally {
                 isProcessing = false
             }
+        }
+    }
+
+    fun retryLastAction() {
+        val audio = lastAudioData
+        if (audio != null) {
+            scope.launch {
+                isProcessing = true
+                error = null
+                setStatus(s.translating)
+                try {
+                    val targetLanguages = enabledLanguages.map { it.code }
+                    val result = geminiService.transcribeAndTranslate(audio, targetLanguages)
+                    result.fold(
+                        onSuccess = { (transcription, translationsMap) ->
+                            sourceText = transcription.text
+                            detectedLanguage = transcription.lang
+                            translations = translationsMap
+                            showToast(s.translateDone)
+                            showSourceInput = false
+                        },
+                        onFailure = { error = s.errorTranslationFailed }
+                    )
+                } catch (e: Exception) {
+                    error = s.errorSomethingWrong
+                } finally {
+                    isProcessing = false
+                }
+            }
+        } else if (sourceText.isNotEmpty()) {
+            translateSourceText()
         }
     }
 
