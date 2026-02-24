@@ -75,6 +75,7 @@ fun TranslatorScreen(
     var enabledLanguages by remember { mutableStateOf(emptyList<Language>()) }
     var isProcessing by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    var lastAudioData by remember { mutableStateOf<ByteArray?>(null) }
     var statusText by remember { mutableStateOf(s.statusDefault) }
     val snackbarHostState = remember { SnackbarHostState() }
     var sourceExpanded by remember { mutableStateOf(false) }
@@ -141,11 +142,44 @@ fun TranslatorScreen(
         showToast(s.copiedAllTranslations)
     }
     
+    fun retryLastAction() {
+        val audio = lastAudioData
+        if (audio != null) {
+            // Retry voice translation with saved audio
+            scope.launch {
+                isProcessing = true
+                error = null
+                setStatus(s.translating)
+                try {
+                    val targetLanguages = enabledLanguages.map { it.code }
+                    val result = geminiService.transcribeAndTranslate(audio, targetLanguages)
+                    result.fold(
+                        onSuccess = { (transcription, translationsMap) ->
+                            sourceText = transcription.text
+                            detectedLanguage = transcription.lang
+                            translations = translationsMap
+                            showToast(s.translateDone)
+                            showSourceInput = false
+                        },
+                        onFailure = { error = s.errorTranslationFailed }
+                    )
+                } catch (e: Exception) {
+                    error = s.errorSomethingWrong
+                } finally {
+                    isProcessing = false
+                }
+            }
+        } else if (sourceText.isNotEmpty()) {
+            translateSourceText()
+        }
+    }
+
     fun translateSourceText(text: String = sourceText) {
         if (text.isBlank()) return
         scope.launch {
             isProcessing = true
             error = null
+            lastAudioData = null
             sourceText = text.trim()
             detectedLanguage = ""
             setStatus(s.translating)
@@ -197,6 +231,7 @@ fun TranslatorScreen(
                 try {
                     val audioData = audioRecorder.stopRecording()
                     if (audioData != null) {
+                        lastAudioData = audioData
                         setStatus(s.translating)
                         val targetLanguages = enabledLanguages.map { it.code }
                         val result = geminiService.transcribeAndTranslate(audioData, targetLanguages)
@@ -519,9 +554,9 @@ fun TranslatorScreen(
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    if (sourceText.isNotEmpty()) {
+                    if (sourceText.isNotEmpty() || lastAudioData != null) {
                         TextButton(
-                            onClick = { withFeedback { error = null; translateSourceText() } }
+                            onClick = { withFeedback { error = null; retryLastAction() } }
                         ) {
                             Icon(Icons.Default.Refresh, null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
