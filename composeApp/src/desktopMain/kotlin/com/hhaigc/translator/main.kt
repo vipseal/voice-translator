@@ -111,7 +111,8 @@ fun main() = application {
         title = "VoiceTranslator",
         icon = painterResource("icon.png"),
         state = state,
-        resizable = true
+        resizable = true,
+        alwaysOnTop = true
     ) {
         // Position window below tray icon and bring to front
         LaunchedEffect(bringToFront) {
@@ -137,11 +138,7 @@ fun main() = application {
                         ProcessBuilder("osascript", "-e",
                             """tell application "System Events" to set frontmost of first process whose unix id is ${ProcessHandle.current().pid()} to true"""
                         ).start()
-                    } catch (_: Exception) {
-                        // Fallback
-                        window.isAlwaysOnTop = true
-                        window.isAlwaysOnTop = false
-                    }
+                    } catch (_: Exception) {}
                 }
                 bringToFront = false
             }
