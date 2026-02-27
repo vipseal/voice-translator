@@ -12,7 +12,12 @@ private external fun jsStorageGet(key: String): String?
 @JsFun("function(key, value) { localStorage.setItem(key, value); }")
 private external fun jsStorageSet(key: String, value: String)
 
-actual class SettingsStore {
+actual class SettingsStore private constructor() {
+    actual companion object {
+        private val _instance by lazy { SettingsStore() }
+        actual fun getInstance(): SettingsStore = _instance
+    }
+    
     private val _enabledLanguages = MutableStateFlow(loadEnabledLanguages())
     
     actual fun getEnabledLanguages(): Flow<List<Language>> = _enabledLanguages

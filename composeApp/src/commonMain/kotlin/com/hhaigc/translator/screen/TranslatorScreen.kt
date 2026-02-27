@@ -42,12 +42,13 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TranslatorScreen(
-    onNavigateToSettings: () -> Unit
+    onNavigateToSettings: () -> Unit,
+    settingsVersion: Int = 0
 ) {
     val scope = rememberCoroutineScope()
     val clipboardService = remember { ClipboardService() }
     val audioRecorder = remember { AudioRecorder() }
-    val settingsStore = remember { SettingsStore() }
+    val settingsStore = remember { SettingsStore.getInstance() }
     val geminiService = remember { GeminiService() }
     val ttsService = remember { TtsService() }
     val soundService = remember { SoundService() }
@@ -60,8 +61,8 @@ fun TranslatorScreen(
         action()
     }
     
-    // Load API key from settings
-    LaunchedEffect(Unit) {
+    // Load API key from settings (re-runs when settingsVersion changes)
+    LaunchedEffect(settingsVersion) {
         val apiKey = settingsStore.getApiKey()
         if (apiKey.isNotEmpty()) {
             geminiService.updateApiKey(apiKey)

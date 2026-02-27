@@ -3,7 +3,11 @@ package com.hhaigc.translator.store
 import com.hhaigc.translator.model.Language
 import kotlinx.coroutines.flow.Flow
 
-expect class SettingsStore() {
+expect class SettingsStore {
+    companion object {
+        fun getInstance(): SettingsStore
+    }
+    
     fun getEnabledLanguages(): Flow<List<Language>>
     suspend fun setLanguageEnabled(languageCode: String, enabled: Boolean)
     suspend fun getSourceLanguage(): String

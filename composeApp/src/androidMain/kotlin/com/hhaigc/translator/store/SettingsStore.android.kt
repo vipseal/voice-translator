@@ -7,9 +7,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-actual class SettingsStore {
-    companion object {
+actual class SettingsStore private constructor() {
+    actual companion object {
         private var appContext: Context? = null
+        private val _instance by lazy { SettingsStore() }
+        
+        actual fun getInstance(): SettingsStore = _instance
         
         fun initWithContext(context: Context) {
             appContext = context.applicationContext

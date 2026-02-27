@@ -7,7 +7,12 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.prefs.Preferences
 
-actual class SettingsStore {
+actual class SettingsStore private constructor() {
+    actual companion object {
+        private val _instance by lazy { SettingsStore() }
+        actual fun getInstance(): SettingsStore = _instance
+    }
+    
     private val prefs = Preferences.userRoot().node("com/hhaigc/translator")
     private val _enabledLanguages = MutableStateFlow(loadEnabledLanguages())
     

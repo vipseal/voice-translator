@@ -18,10 +18,11 @@ enum class Screen {
 
 @Composable
 fun App() {
-    val settingsStore = remember { SettingsStore() }
+    val settingsStore = remember { SettingsStore.getInstance() }
     val scope = rememberCoroutineScope()
     var themeMode by remember { mutableStateOf(ThemeMode.AUTO) }
     var currentScreen by remember { mutableStateOf<Screen?>(null) }
+    var settingsVersion by remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {
         val saved = settingsStore.getThemeMode()
@@ -53,7 +54,8 @@ fun App() {
                     TranslatorScreen(
                         onNavigateToSettings = {
                             currentScreen = Screen.Settings
-                        }
+                        },
+                        settingsVersion = settingsVersion
                     )
                     // Overlay Settings on top when active
                     AnimatedVisibility(
@@ -62,10 +64,12 @@ fun App() {
                         exit = slideOutHorizontally(targetOffsetX = { it })
                     ) {
                         PlatformBackHandler(enabled = true) {
+                            settingsVersion++
                             currentScreen = Screen.Translator
                         }
                         SettingsScreen(
                             onBackClick = {
+                                settingsVersion++
                                 currentScreen = Screen.Translator
                             },
                             currentThemeMode = themeMode,

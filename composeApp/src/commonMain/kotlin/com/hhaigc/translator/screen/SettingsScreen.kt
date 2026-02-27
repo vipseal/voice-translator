@@ -34,7 +34,7 @@ fun SettingsScreen(
     onThemeModeChanged: (ThemeMode) -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
-    val settingsStore = remember { SettingsStore() }
+    val settingsStore = remember { SettingsStore.getInstance() }
     val s = AppStrings.current
     val haptic = LocalHapticFeedback.current
     val soundService = remember { SoundService() }
