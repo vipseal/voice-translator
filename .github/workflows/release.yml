@@ -1,5 +1,8 @@
 name: Build & Release
 
+env:
+  ENCRYPTED_GEMINI_KEY: ${{ secrets.ENCRYPTED_GEMINI_KEY }}
+
 on:
   push:
     tags:

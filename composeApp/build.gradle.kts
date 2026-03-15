@@ -191,6 +191,23 @@ val appVersion: String by lazy {
     if (tag.startsWith("v")) tag.substring(1) else tag.ifEmpty { "0.0.0" }
 }
 
+// Generate encrypted API key config from environment variable
+tasks.register("generateCryptoConfig") {
+    val outputDir = layout.buildDirectory.dir("generated/crypto")
+    outputs.dir(outputDir)
+    doLast {
+        val dir = outputDir.get().asFile.resolve("com/hhaigc/translator/crypto")
+        dir.mkdirs()
+        val encryptedKey = System.getenv("ENCRYPTED_GEMINI_KEY") ?: ""
+        dir.resolve("CryptoConfig.kt").writeText("""
+            package com.hhaigc.translator.crypto
+            object CryptoConfig {
+                const val ENCRYPTED_KEY = "$encryptedKey"
+            }
+        """.trimIndent())
+    }
+}
+
 tasks.register("generateVersionFile") {
     val outputDir = layout.buildDirectory.dir("generated/version")
     outputs.dir(outputDir)
@@ -208,8 +225,10 @@ tasks.register("generateVersionFile") {
 
 kotlin.sourceSets.commonMain {
     kotlin.srcDir(layout.buildDirectory.dir("generated/version"))
+    kotlin.srcDir(layout.buildDirectory.dir("generated/crypto"))
 }
 
 tasks.matching { it.name.startsWith("compile") && it.name.contains("Kotlin") }.configureEach {
     dependsOn("generateVersionFile")
+    dependsOn("generateCryptoConfig")
 }

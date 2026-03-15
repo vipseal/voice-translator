@@ -4,8 +4,7 @@ import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 object CryptoUtils {
-    // Encrypted API key: Base64(XOR(apiKey, SHA256(activationCode)))
-    private val encryptedKeyBase64 = "mYEJ2EalT7oZEOuf5B6Y7h2Sr5Z+4s/bUQ1u6SvGM066sBzhe+5p"
+    private val encryptedKeyBase64 = CryptoConfig.ENCRYPTED_KEY
 
     /**
      * Simple SHA-256 implementation (pure Kotlin, no dependencies).
