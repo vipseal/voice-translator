@@ -108,9 +108,9 @@ android {
             val keystoreFile = file("../keystore.jks")
             if (keystoreFile.exists()) {
                 storeFile = keystoreFile
-                storePassword = "kgduitee"
+                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "changeme"
                 keyAlias = "release"
-                keyPassword = "kgduitee"
+                keyPassword = System.getenv("KEYSTORE_PASSWORD") ?: "changeme"
             }
         }
     }
