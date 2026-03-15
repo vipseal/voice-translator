@@ -84,6 +84,13 @@ fun App() {
                                         }
                                     )
                                 }
+                            },
+                            onResetAuth = {
+                                scope.launch {
+                                    settingsStore.setApiKey("")
+                                    settingsStore.setActivated(false)
+                                    currentScreen = Screen.Activation
+                                }
                             }
                         )
                     }

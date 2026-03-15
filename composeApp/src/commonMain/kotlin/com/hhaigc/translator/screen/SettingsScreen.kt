@@ -1,5 +1,6 @@
 package com.hhaigc.translator.screen
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,7 +33,8 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     onBackClick: () -> Unit,
     currentThemeMode: ThemeMode = ThemeMode.AUTO,
-    onThemeModeChanged: (ThemeMode) -> Unit = {}
+    onThemeModeChanged: (ThemeMode) -> Unit = {},
+    onResetAuth: () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
     val settingsStore = remember { SettingsStore.getInstance() }
@@ -44,6 +47,7 @@ fun SettingsScreen(
         action()
     }
     var enabledLanguages by remember { mutableStateOf(emptyList<Language>()) }
+    var showResetDialog by remember { mutableStateOf(false) }
     
     LaunchedEffect(Unit) {
         settingsStore.getEnabledLanguages().collect { languages ->
@@ -211,7 +215,88 @@ fun SettingsScreen(
                     }
                 }
             }
+
+            // Authentication section
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = s.authentication,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                        OutlinedButton(
+                            onClick = { withFeedback { showResetDialog = true } },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            ),
+                            border = BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
+                            )
+                        ) {
+                            Icon(
+                                Icons.Default.Refresh,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = s.resetAuth,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Bottom spacing
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
+    }
+
+    // Reset confirmation dialog
+    if (showResetDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetDialog = false },
+            title = {
+                Text(
+                    text = s.resetAuthConfirm,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(text = s.resetAuthDescription)
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showResetDialog = false
+                        onResetAuth()
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(s.reset, fontWeight = FontWeight.SemiBold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetDialog = false }) {
+                    Text(s.cancel)
+                }
+            }
+        )
     }
 }
 
