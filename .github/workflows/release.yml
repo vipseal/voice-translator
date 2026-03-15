@@ -15,7 +15,6 @@ on:
         default: 'all'
 
 jobs:
-  # Determine which targets to build
   setup:
     runs-on: ubuntu-latest
     outputs:
@@ -25,6 +24,7 @@ jobs:
       build_windows: ${{ steps.targets.outputs.windows }}
       build_ios: ${{ steps.targets.outputs.ios }}
       build_web: ${{ steps.targets.outputs.web }}
+      tag_name: ${{ steps.tag.outputs.tag }}
     steps:
       - id: targets
         run: |
@@ -44,11 +44,37 @@ jobs:
             echo "ios=$([[ "$TARGETS" == *ios* ]] && echo true || echo false)" >> $GITHUB_OUTPUT
             echo "web=$([[ "$TARGETS" == *web* ]] && echo true || echo false)" >> $GITHUB_OUTPUT
           fi
+      - id: tag
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
+  # Create release first so build jobs can upload directly to it
+  create-release:
+    needs: setup
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.setup.outputs.tag_name }}
+          generate_release_notes: true
+          draft: false
+          prerelease: true
 
   build-android:
-    needs: setup
-    if: needs.setup.outputs.build_android == 'true'
+    needs: [setup, create-release]
+    if: always() && needs.setup.outputs.build_android == 'true' && !cancelled()
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -69,16 +95,23 @@ jobs:
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: ./gradlew :composeApp:assembleRelease
-      - name: Upload Android APK
-        uses: actions/upload-artifact@v4
+      - name: Rename APK
+        run: |
+          APK=$(find composeApp/build/outputs/apk/release -name "*.apk" | head -1)
+          cp "$APK" "VoiceTranslator-${{ needs.setup.outputs.tag_name }}-android.apk"
+      - name: Upload to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
         with:
-          name: android-apk
-          path: composeApp/build/outputs/apk/release/*.apk
+          tag_name: ${{ needs.setup.outputs.tag_name }}
+          files: VoiceTranslator-*.apk
 
   build-desktop-linux:
-    needs: setup
-    if: needs.setup.outputs.build_linux == 'true'
+    needs: [setup, create-release]
+    if: always() && needs.setup.outputs.build_linux == 'true' && !cancelled()
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -92,16 +125,19 @@ jobs:
           validate-wrappers: false
       - name: Build Linux DEB
         run: ./gradlew :composeApp:packageDeb
-      - name: Upload Linux DEB
-        uses: actions/upload-artifact@v4
+      - name: Upload to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
         with:
-          name: desktop-linux
-          path: composeApp/build/compose/binaries/main/deb/*.deb
+          tag_name: ${{ needs.setup.outputs.tag_name }}
+          files: composeApp/build/compose/binaries/main/deb/*.deb
 
   build-desktop-macos:
-    needs: setup
-    if: needs.setup.outputs.build_macos == 'true'
+    needs: [setup, create-release]
+    if: always() && needs.setup.outputs.build_macos == 'true' && !cancelled()
     runs-on: macos-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -128,16 +164,19 @@ jobs:
           rm certificate.p12
       - name: Build macOS DMG
         run: ./gradlew :composeApp:packageDmg
-      - name: Upload macOS DMG
-        uses: actions/upload-artifact@v4
+      - name: Upload to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
         with:
-          name: desktop-macos
-          path: composeApp/build/compose/binaries/main/dmg/*.dmg
+          tag_name: ${{ needs.setup.outputs.tag_name }}
+          files: composeApp/build/compose/binaries/main/dmg/*.dmg
 
   build-desktop-windows:
-    needs: setup
-    if: needs.setup.outputs.build_windows == 'true'
+    needs: [setup, create-release]
+    if: always() && needs.setup.outputs.build_windows == 'true' && !cancelled()
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -152,21 +191,19 @@ jobs:
       - name: Build Windows MSI
         shell: cmd
         run: call gradlew.bat :composeApp:packageMsi --no-build-cache --rerun-tasks
-      - name: List build output
-        shell: cmd
-        run: dir /s /b composeApp\build\compose\binaries\
-        continue-on-error: true
-      - name: Upload Windows MSI
-        uses: actions/upload-artifact@v4
+      - name: Upload to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
         with:
-          name: desktop-windows
-          path: composeApp/build/compose/binaries/main/msi/*.msi
-          if-no-files-found: error
+          tag_name: ${{ needs.setup.outputs.tag_name }}
+          files: composeApp/build/compose/binaries/main/msi/*.msi
 
   build-ios:
-    needs: setup
-    if: needs.setup.outputs.build_ios == 'true'
+    needs: [setup, create-release]
+    if: always() && needs.setup.outputs.build_ios == 'true' && !cancelled()
     runs-on: macos-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -184,16 +221,19 @@ jobs:
         run: |
           cd composeApp/build/bin/iosArm64/releaseFramework
           zip -r ${{ github.workspace }}/ComposeApp-ios-framework.zip ComposeApp.framework
-      - name: Upload iOS Framework
-        uses: actions/upload-artifact@v4
+      - name: Upload to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
         with:
-          name: ios-framework
-          path: ComposeApp-ios-framework.zip
+          tag_name: ${{ needs.setup.outputs.tag_name }}
+          files: ComposeApp-ios-framework.zip
 
   build-web:
-    needs: setup
-    if: needs.setup.outputs.build_web == 'true'
+    needs: [setup, create-release]
+    if: always() && needs.setup.outputs.build_web == 'true' && !cancelled()
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -209,35 +249,9 @@ jobs:
         run: ./gradlew :composeApp:wasmJsBrowserDistribution
       - name: Package Web App
         run: cd composeApp/build/dist/wasmJs/productionExecutable && zip -r $GITHUB_WORKSPACE/VoiceTranslator-web.zip .
-      - name: Upload Web App
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-app
-          path: VoiceTranslator-web.zip
-
-  release:
-    needs: [setup, build-android, build-desktop-linux, build-desktop-macos, build-desktop-windows, build-ios, build-web]
-    if: always() && startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-      - name: List artifacts
-        run: find artifacts -type f
-      - name: Create Release
+      - name: Upload to Release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            artifacts/**/*.apk
-            artifacts/**/*.dmg
-            artifacts/**/*.msi
-            artifacts/**/*.deb
-            artifacts/**/*.zip
-            artifacts/**/*.jar
-          generate_release_notes: true
-          draft: false
-          prerelease: true
+          tag_name: ${{ needs.setup.outputs.tag_name }}
+          files: VoiceTranslator-web.zip
