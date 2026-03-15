@@ -1,0 +1,38 @@
+name: Tests
+
+env:
+  ENCRYPTED_GEMINI_KEY: ${{ secrets.ENCRYPTED_GEMINI_KEY }}
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          validate-wrappers: false
+      - name: Run Tests
+        run: ./gradlew desktopTest
+      - name: Test Results Summary
+        if: always()
+        run: |
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          find composeApp/build/reports/tests -name "*.html" -exec echo "Report: {}" \; >> $GITHUB_STEP_SUMMARY 2>/dev/null || true
+      - name: Upload Test Reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: composeApp/build/reports/tests/

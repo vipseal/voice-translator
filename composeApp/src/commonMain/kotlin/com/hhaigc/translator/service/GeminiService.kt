@@ -78,7 +78,7 @@ class GeminiService(
     
     private val json = Json { ignoreUnknownKeys = true }
     
-    private fun cleanJsonResponse(text: String): String {
+    internal fun cleanJsonResponse(text: String): String {
         return text.trim()
             .removePrefix("```json").removePrefix("```")
             .removeSuffix("```").trim()
