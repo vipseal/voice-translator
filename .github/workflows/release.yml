@@ -255,3 +255,13 @@ jobs:
         with:
           tag_name: ${{ needs.setup.outputs.tag_name }}
           files: VoiceTranslator-web.zip
+      - name: Deploy to server
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          mkdir -p web-dist
+          unzip -o VoiceTranslator-web.zip -d web-dist/
+          rsync -avz --delete web-dist/ root@${{ secrets.DEPLOY_HOST }}:/var/www/voice-translator/
+          echo "✅ Web app deployed to production"
